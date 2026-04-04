@@ -1,0 +1,9 @@
+id,name,lat,long,neighbors
+1,Antananarivo Renivohitra,-18.8792,47.5079,"[2, 3, 4]"
+2,Antsirabe I,-19.8659,47.0333,"[1, 5]"
+3,Toamasina I,-18.1492,49.4023,"[1, 6]"
+4,Mahajanga I,-15.7167,46.3167,"[1, 7]"
+5,Fianarantsoa I,-21.4527,47.0857,"[2, 8]"
+6,Sainte Marie,-17.0000,49.8500,"[3]"
+7,Antsiranana I,-12.2700,49.2900,"[4]"
+8,Toliara I,-23.3500,43.6667,"[5]"
