@@ -1,32 +1,28 @@
-# --- PYTHON ---
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-.venv/
-venv/
-ENV/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
 .env
+.venv
+venv/
+env/
+ENV/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# --- OSTE / SYSTEM ---
-.DS_Store
-Thumbs.db
-
-# --- IDE ---
+# IDEs
 .vscode/
 .idea/
-*.swp
-*.bak
 
-# --- AI & ASSISTANCE (Pour rester discret) ---
-.gemini/
-.aider*
-.gpt*
-*.log
-todo.md
-logique_diagramme_classe.txt
-scenarios_cas_utilisation.txt
-
-# --- DOCS TEMPORAIRES ---
-*.docx
-*.pdf
-!hazo_lova/docs/ # On garde le dossier docs propre mais on ignore les fichiers sources à la racine
+# OS
+.DS_Store
+Thumbs.db

@@ -1,3 +1,9 @@
-matplotlib
-numpy
-pandas
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+ecdsa
+flet
+python-multipart
+passlib[bcrypt]
+pytest
