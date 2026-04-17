@@ -1,0 +1,28 @@
+
+   1. src/utils/crypto.py :
+       * Rôle : Implémentation ECDSA pour générer les clés et signer les transactions.
+       * Pourquoi : La sécurité est la base de toute confiance dans la blockchain.
+
+   2. src/blockchain/transaction.py & merkle_tree.py :
+       * Rôle : Structure des transactions et calcul des racines de Merkle.
+       * Pourquoi : Définit ce qui est stocké dans les blocks.
+
+   3. src/blockchain/block.py & blockchain.py :
+       * Rôle : Création des blocks, chaînage, vérification de validité (SHA-256).
+       * Pourquoi : Le cœur du système.
+
+   4. src/api/schemas/ & src/api/routes/ :
+       * Rôle : Création des endpoints API (FastAPI) pour manipuler les données.
+       * Pourquoi : Exposer la logique métier à l'interface Web et Mobile.
+
+   5. src/api/main.py :
+       * Rôle : Lancement du serveur FastAPI.
+       * Pourquoi : Point d'entrée pour tester l'ensemble.
+
+   6. interfaces/streamlit/ & interfaces/flet/ :
+       * Rôle : Interfaces utilisateur finale.
+       * Pourquoi : Utilise l'API pour afficher les données.
+
+   7. tests/ :
+       * Rôle : Tests unitaires tout au long du processus.
+       * Pourquoi : Indispensable pour garantir que la blockchain ne soit jamais corrompue.
