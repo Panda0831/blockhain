@@ -38,7 +38,7 @@ class Transaction:
         self.horodatage = time.time()
         
         # Éléments cryptographiques (initialisés à None)
-        self.signature = Noneself.secteur.value
+        self.signature = None
         self.hash = self.calculer_hash()
 
     def calculer_hash(self):

@@ -12,7 +12,7 @@ class User(Base):
     Synchronisé avec le modèle métier Acteur.
     """
 
-    __tablename__ = "users"
+    __rtablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
