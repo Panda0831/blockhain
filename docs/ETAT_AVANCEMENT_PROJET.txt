@@ -1,0 +1,62 @@
+================================================================================
+RAPPORT D'AVANCEMENT : PROJET HAZO LOVA (MADAGASCAR 2035)
+================================================================================
+Date : Samedi 18 Avril 2026
+État actuel : PHASE 1 - Architecture & Cadrage (TERMINÉE)
+Cible : Présentation finale le 20 Mai 2026
+--------------------------------------------------------------------------------
+
+1. OBJECTIF DU PROJET
+---------------------
+Développer une infrastructure blockchain décentralisée et optimisée pour 
+Madagascar, répondant à quatre enjeux critiques :
+- La traçabilité de la Vanille (Exportation).
+- La certification des Diplômes (Éducation).
+- La gestion foncière sans double vente (Propriété).
+- Le micro-crédit rural (Finance).
+
+2. RÉALISATIONS (CE QUI A ÉTÉ FAIT)
+-----------------------------------
+
+A. DÉFINITION DES SCÉNARIOS D'UTILISATION :
+   Trois cas d'usage réels ont été modélisés pour prouver l'utilité du système :
+   - Scénario A : Vente de terrain sécurisée via Union-Find.
+   - Scénario B : Validation de blocs optimisée énergétiquement par IA (Q-Learning) 
+     et propagation via Graphes (A*).
+   - Scénario C : Vérification instantanée d'authenticité de diplôme via Merkle Tree.
+
+B. CONCEPTION ARCHITECTURALE (UML) :
+   La logique du système est divisée en 4 couches complémentaires :
+   - Couche Données : Immutabilité par SHA-256 et Merkle Trees.
+   - Couche Réseau : Modélisation des 119 districts de Madagascar.
+   - Couche Intelligence : IA (Q-Learning) pour la sélection des validateurs.
+   - Couche Métier : Algorithmes spécialisés (A*, Union-Find).
+
+C. STRUCTURE DU PROJET (RÉPERTOIRES) :
+   L'arborescence complète a été mise en place pour accueillir le code :
+   - /src/blockchain : Cœur du système.
+   - /src/algorithms : Intelligence et optimisation.
+   - /src/models : Structures de données (Graphes, Tas).
+   - /interfaces : Front-end (Streamlit & Flet).
+   - /data : Données géographiques des districts.
+
+3. JUSTIFICATION DES CHOIX ALGORITHMIQUES
+-----------------------------------------
+Pour le rapport final (le "Livre"), nous avons déjà les arguments clés :
+- UNION-FIND : Choisi pour sa complexité quasi-constante a(n), idéal pour vérifier 
+  les conflits de propriété sur des milliers de parcelles en temps réel.
+- A* (A-STAR) : Utilise l'heuristique géographique des districts pour réduire 
+  la latence de propagation des données.
+- Q-LEARNING : Permet au système d'apprendre quels nœuds sont les plus fiables 
+  et économes en énergie, une priorité pour l'infrastructure malgache.
+
+4. PROCHAINES ÉTAPES (PHASE 2 : CODAGE)
+---------------------------------------
+1. Implémenter la cryptographie (ECDSA) et les transactions.
+2. Développer l'arbre de Merkle et la chaîne de blocs.
+3. Coder les algorithmes de recherche et d'apprentissage.
+4. Créer les interfaces utilisateurs.
+
+--------------------------------------------------------------------------------
+Ce document sert de base pour la rédaction du mémoire technique final.
+================================================================================
