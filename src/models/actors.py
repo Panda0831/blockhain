@@ -10,7 +10,7 @@ class RoleActeur(Enum):
     MINISTERE = "MINISTERE"  # Autorité supérieure
     UNIVERSITE = "UNIVERSITE"  # Émetteur de diplômes
     AGENCE_FONCIERE = "FONCIER"  # Gestion des titres de propriété
-    EXPORTATEUR = "EXPORTATEUR"  # Acheteur/Exportateur de vanille
+    EXPORTATEUR = "EXPORTATEUR"  # Acheteur/Exportateur de produits agricoles
     RECOLTEUR = "RECOLTEUR"  # Producteur local
     INSTITUT_MICROFINANCE = "IMF"  # Émetteur de micro-crédits
     CITOYEN = "CITOYEN"  # Utilisateur final / Client
@@ -34,7 +34,6 @@ class Acteur:
     # Historique local des transactions émises/reçues
     historique_transactions: List[str] = field(default_factory=list, init=False)
 
-    # __post_init__ est une méthode spéciale des dataclasses qui est appelée automatiquement après l'initialisation de l'objet.
     # e
     def __post_init__(self):
         """Génère automatiquement la paire de clés lors de la création de l'acteur."""
@@ -58,7 +57,6 @@ class Acteur:
         # L'acteur signe la transaction avec sa propre clé privée
         transaction.signer(self.cle_privee)
 
-        # On ajoute le hash à l'historique local
         self.historique_transactions.append(transaction.hash)
 
         return transaction

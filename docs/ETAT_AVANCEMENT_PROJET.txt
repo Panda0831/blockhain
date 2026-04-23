@@ -1,8 +1,8 @@
 ================================================================================
 RAPPORT D'AVANCEMENT : PROJET HAZO LOVA (MADAGASCAR 2035)
 ================================================================================
-Date : Samedi 18 Avril 2026
-État actuel : PHASE 1 - Architecture & Cadrage (TERMINÉE)
+Date : Mercredi 22 Avril 2026
+État actuel : PHASE 2 - Développement Technique (EN COURS)
 Cible : Présentation finale le 20 Mai 2026
 --------------------------------------------------------------------------------
 
@@ -19,43 +19,34 @@ Madagascar, répondant à quatre enjeux critiques :
 -----------------------------------
 
 A. DÉFINITION DES SCÉNARIOS D'UTILISATION :
-   Trois cas d'usage réels ont été modélisés pour prouver l'utilité du système :
+   Trois cas d'usage réels ont été modélisés :
    - Scénario A : Vente de terrain sécurisée via Union-Find.
-   - Scénario B : Validation de blocs optimisée énergétiquement par IA (Q-Learning) 
-     et propagation via Graphes (A*).
+   - Scénario B : Validation de blocs optimisée énergétiquement par IA.
    - Scénario C : Vérification instantanée d'authenticité de diplôme via Merkle Tree.
 
 B. CONCEPTION ARCHITECTURALE (UML) :
-   La logique du système est divisée en 4 couches complémentaires :
-   - Couche Données : Immutabilité par SHA-256 et Merkle Trees.
-   - Couche Réseau : Modélisation des 119 districts de Madagascar.
-   - Couche Intelligence : IA (Q-Learning) pour la sélection des validateurs.
-   - Couche Métier : Algorithmes spécialisés (A*, Union-Find).
+   Logique du système divisée en 4 couches (Données, Réseau, Intelligence, Métier).
 
-C. STRUCTURE DU PROJET (RÉPERTOIRES) :
-   L'arborescence complète a été mise en place pour accueillir le code :
-   - /src/blockchain : Cœur du système.
-   - /src/algorithms : Intelligence et optimisation.
-   - /src/models : Structures de données (Graphes, Tas).
-   - /interfaces : Front-end (Streamlit & Flet).
-   - /data : Données géographiques des districts.
+C. STRUCTURE DU PROJET :
+   Arborescence mise en place avec les modules /src/blockchain, /src/algorithms, etc.
+
+D. SÉCURITÉ ET CRYPTOGRAPHIE (TERMINÉ) :
+   - Implémentation du module Crypto utilisant 'ecdsa' (SECP256k1) pour la blockchain.
+   - Intégration de 'passlib' (bcrypt) pour le hachage sécurisé des mots de passe.
+   - Développement des structures de base : Transactions signées et Arbres de Merkle.
 
 3. JUSTIFICATION DES CHOIX ALGORITHMIQUES
 -----------------------------------------
-Pour le rapport final (le "Livre"), nous avons déjà les arguments clés :
-- UNION-FIND : Choisi pour sa complexité quasi-constante a(n), idéal pour vérifier 
-  les conflits de propriété sur des milliers de parcelles en temps réel.
-- A* (A-STAR) : Utilise l'heuristique géographique des districts pour réduire 
-  la latence de propagation des données.
-- Q-LEARNING : Permet au système d'apprendre quels nœuds sont les plus fiables 
-  et économes en énergie, une priorité pour l'infrastructure malgache.
+- UNION-FIND : Complexité quasi-constante pour la gestion foncière.
+- A* (A-STAR) : Optimisation de la propagation via la géographie des districts.
+- Q-LEARNING : Sélection intelligente des validateurs pour l'économie d'énergie.
 
-4. PROCHAINES ÉTAPES (PHASE 2 : CODAGE)
----------------------------------------
-1. Implémenter la cryptographie (ECDSA) et les transactions.
-2. Développer l'arbre de Merkle et la chaîne de blocs.
-3. Coder les algorithmes de recherche et d'apprentissage.
-4. Créer les interfaces utilisateurs.
+4. PROCHAINES ÉTAPES (EN COURS)
+-------------------------------
+1. Finaliser la structure de la Blockchain (Chaînage des blocs).
+2. Coder les algorithmes de recherche (A*) et d'apprentissage (Q-Learning).
+3. Intégrer les cas d'utilisation métier (Foncier, Diplôme, Vanille).
+4. Développer l'interface unifiée (Web & Mobile) avec Flet (Python).
 
 --------------------------------------------------------------------------------
 Ce document sert de base pour la rédaction du mémoire technique final.

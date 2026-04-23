@@ -2,11 +2,24 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Databases
 *.db
 *.sqlite
 *.sqlite3
+
+# Node.js
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # Environment
 .env
@@ -26,5 +39,3 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
-#documents
-.txt

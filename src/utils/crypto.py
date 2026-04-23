@@ -1,19 +1,31 @@
 import hashlib
 import secrets
-
 import ecdsa
-
+from passlib.context import CryptContext
 
 class Crypto:
     """
-    Une implémentation utilisant le module 'ecdsa' pour la signature numérique
-    sur courbe elliptique (ECDSA) avec la courbe SECP256k1.
+    Une implémentation utilisant le module 'ecdsa' pour la signature numérique 
+    sur courbe elliptique (ECDSA) et 'passlib' pour la sécurité des mots de passe.
     """
 
-    # Paramètres de la courbe SECP256k1 pour compatibilité (si nécessaire par d'autres modules)
+    # Configuration pour le hachage des mots de passe (utilisé pour l'authentification)
+    _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+    # Paramètres de la courbe SECP256k1 pour compatibilité
     N = ecdsa.SECP256k1.order
     P = ecdsa.SECP256k1.curve.p()
     G = (ecdsa.SECP256k1.generator.x(), ecdsa.SECP256k1.generator.y())
+
+    @staticmethod
+    def hacher_mot_de_passe(mot_de_passe: str) -> str:
+        """Hache un mot de passe de manière sécurisée avec bcrypt."""
+        return Crypto._pwd_context.hash(mot_de_passe)
+
+    @staticmethod
+    def verifier_mot_de_passe(mot_de_passe_clair: str, mot_de_passe_hache: str) -> bool:
+        """Vérifie si un mot de passe correspond à son empreinte hachée."""
+        return Crypto._pwd_context.verify(mot_de_passe_clair, mot_de_passe_hache)
 
     @staticmethod
     def generer_paire_cles():

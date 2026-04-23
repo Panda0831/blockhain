@@ -57,11 +57,15 @@ Ce document suit la progression de l'infrastructure décentralisée pour Madagas
 - [ ] Réaliser les tests de performance (temps de calcul, économie d'énergie).
 - [ ] Générer le tableau comparatif "Baseline vs Optimisé" dans `/benchmarks`.
 
+## 🔵 PHASE 3 : Backend API (FastAPI)
+- [ ] Créer les schémas de données (Pydantic).
+- [ ] Implémenter les routes pour la Blockchain.
+- [ ] Développer les services pour les secteurs (Foncier, Diplôme, etc.).
+
 ## 🔴 PHASE 4 : Prototype & Présentation
-- [ ] **Web App (Streamlit)** : Dashboard pour l'administrateur et les universités.
-- [ ] **Mobile App (Flet)** : Interface pour les producteurs et acheteurs sur le terrain.
-- [ ] **Dossier Algorithmique** : Rédiger les preuves de complexité et pseudo-codes.
-- [ ] **Pitch (5 min)** : Préparer le diaporama "Numérique Malagasy 2035".
+- [ ] **Frontend Web (Next.js)** : Interface pro avec Tailwind CSS.
+- [ ] **Intégration API** : Appels API via Axios/Fetch vers FastAPI.
+- [ ] **Mobile (React Native)** : (Optionnel/Plus tard) Initialisation du projet mobile.
 
 ---
 *Note : Pour chaque fonctionnalité, n'oubliez pas d'ajouter les tests unitaires dans `/tests/unit` !*
