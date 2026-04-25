@@ -3,7 +3,11 @@
        * Rôle : Implémentation ECDSA pour générer les clés et signer les transactions.
        * Pourquoi : La sécurité est la base de toute confiance dans la blockchain.
 
-   2. src/blockchain/transaction.py & merkle_tree.py :
+   2. src/algorithms/union_find.py (TERMINÉ) :
+       * Rôle : Algorithme pour la gestion des parcelles et détection de double vente.
+       * Pourquoi : Garantit l'unicité des titres de propriété.
+
+   3. src/blockchain/transaction.py & merkle_tree.py :
        * Rôle : Structure des transactions et calcul des racines de Merkle.
        * Pourquoi : Définit ce qui est stocké dans les blocks.
 

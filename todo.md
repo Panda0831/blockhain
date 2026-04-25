@@ -16,8 +16,8 @@ Ce document suit la progression de l'infrastructure décentralisée pour Madagas
     - [ ] *Dépendance : Aucune.*
 
 2.  **Union-Find** (`src/algorithms/union_find.py`)
-    - [ ] Implémenter les opérations `find` et `union`.
-    - [ ] Ajouter la détection de conflits pour les terrains.
+    - [x] Implémenter les opérations `find` et `union`.
+    - [x] Ajouter la détection de conflits pour les terrains.
     - [ ] *Dépendance : Transaction.*
 
 3.  **Merkle Tree** (`src/blockchain/merkle_tree.py`)
@@ -58,9 +58,9 @@ Ce document suit la progression de l'infrastructure décentralisée pour Madagas
 - [ ] Générer le tableau comparatif "Baseline vs Optimisé" dans `/benchmarks`.
 
 ## 🔵 PHASE 3 : Backend API (FastAPI)
-- [ ] Créer les schémas de données (Pydantic).
-- [ ] Implémenter les routes pour la Blockchain.
-- [ ] Développer les services pour les secteurs (Foncier, Diplôme, etc.).
+- [x] Créer les schémas de données (Pydantic).
+- [x] Implémenter les routes pour la Blockchain.
+- [x] Développer les services pour les secteurs (Foncier, Diplôme, etc.).
 
 ## 🔴 PHASE 4 : Prototype & Présentation
 - [ ] **Frontend Web (Next.js)** : Interface pro avec Tailwind CSS.
