@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 
 class SecteurActivite(str, Enum):
-    VANILLE = "VANILLE"
+    PRODUITS_AGRICOLES = "PRODUITS_AGRICOLES"
     DIPLOME = "DIPLOME"
     FONCIER = "FONCIER"
     MICROFINANCE = "MICROFINANCE"

@@ -16,7 +16,7 @@ def test_ajouter_transaction_valide():
     privee, publique = Crypto.generer_paire_cles()
     _, dest_publique = Crypto.generer_paire_cles()
     
-    tx = Transaction(publique, dest_publique, "Data", SecteurActivite.VANILLE)
+    tx = Transaction(publique, dest_publique, "Data", SecteurActivite.PRODUITS_AGRICOLES)
     tx.signer(privee)
     
     success = bc.ajouter_transaction(tx)
@@ -29,7 +29,7 @@ def test_ajouter_transaction_invalide():
     _, publique = Crypto.generer_paire_cles()
     _, dest_publique = Crypto.generer_paire_cles()
     
-    tx = Transaction(publique, dest_publique, "Data", SecteurActivite.VANILLE)
+    tx = Transaction(publique, dest_publique, "Data", SecteurActivite.PRODUITS_AGRICOLES)
     # Pas de signature
     
     success = bc.ajouter_transaction(tx)

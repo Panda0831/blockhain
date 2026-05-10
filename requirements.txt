@@ -6,4 +6,5 @@ ecdsa
 flet
 python-multipart
 passlib[bcrypt]
+email-validator
 pytest

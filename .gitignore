@@ -36,6 +36,9 @@ ENV/
 .vscode/
 .idea/
 
+# Persistence Data
+data/persistence/
+
 # OS
 .DS_Store
 Thumbs.db

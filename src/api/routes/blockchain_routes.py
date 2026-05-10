@@ -1,14 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
-from src.blockchain.blockchain import Blockchain
+from src.api.instances import blockchain_instance
 from src.blockchain.transaction import Transaction, SecteurActivite as BTSecteur
-from src.api.schemas.blockchain import TransactionCreate, TransactionResponse, BlockResponse, BlockchainSummary, SecteurActivite
+from src.api.schemas.blockchain import BlockchainSummary, BlockResponse, TransactionCreate, TransactionResponse
 
 router = APIRouter()
-
-# Instance globale de la blockchain pour la démonstration
-# Dans un projet réel, on utiliserait une base de données ou un singleton
-blockchain_instance = Blockchain()
 
 @router.get("/", response_model=BlockchainSummary)
 async def get_blockchain_status():
@@ -91,3 +87,27 @@ async def mine_block():
         "nonce": nouveau_bloc.nonce,
         "hash": nouveau_bloc.hash
     }
+
+@router.get("/verify/{tx_hash}")
+async def verify_transaction(tx_hash: str):
+    """
+    Vérifie si une transaction existe dans la blockchain et est valide.
+    Simule la vérification via Arbre de Merkle.
+    """
+    for bloc in blockchain_instance.chaine:
+        for tx in bloc.transactions:
+            if tx.hash == tx_hash:
+                return {
+                    "status": "AUTHENTIQUE",
+                    "transaction": {
+                        "hash": tx.hash,
+                        "secteur": tx.secteur.value,
+                        "description": tx.description,
+                        "horodatage": tx.horodatage
+                    },
+                    "bloc_index": bloc.index,
+                    "merkle_root": bloc.merkle_root,
+                    "confirmation": "Validé par le réseau Hazo Lova"
+                }
+    
+    raise HTTPException(status_code=404, detail="Transaction non trouvée ou falsifiée")

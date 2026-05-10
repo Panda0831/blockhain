@@ -20,18 +20,48 @@ class UnionFind:
 
     def find(self, item):
         """
-        Trouve la racine de l'élément avec compression de chemin.
-        La racine représente le propriétaire ultime ou le titre foncier parent.
+        Trouve la racine de l'élément (itératif pour éviter RecursionError).
         """
         if item not in self.parent:
             return None
 
-        if self.parent[item] == item:
-            return item
+        # On remonte jusqu'à la racine
+        path = []
+        curr = item
+        while self.parent[curr] != curr:
+            path.append(curr)
+            curr = self.parent[curr]
+            # Sécurité anti-boucle infinie (au cas où les données seraient corrompues)
+            if len(path) > 1000:
+                print(f" [!] Boucle infinie détectée dans UnionFind pour {item}. Réinitialisation.")
+                self.parent[curr] = curr
+                return curr
 
-        # Compression de chemin : on rattache directement à la racine
-        self.parent[item] = self.find(self.parent[item])
-        return self.parent[item]
+        # Compression de chemin (facultatif mais recommandé)
+        for node in path:
+            self.parent[node] = curr
+
+        return curr
+
+    def bind(self, parent_item, child_item):
+        """
+        Force une relation parent-enfant (ex: Propriétaire -> Terre).
+        Garantit que le parent reste la racine.
+        """
+        self.add(parent_item)
+        self.add(child_item)
+        
+        # On trouve les racines actuelles
+        root_p = self.find(parent_item)
+        root_c = self.find(child_item)
+        
+        # On attache la racine de l'enfant à la racine du parent
+        if root_p != root_c:
+            self.parent[root_c] = root_p
+            # On augmente le rang du parent pour qu'il reste dominant
+            self.rang[root_p] = max(self.rang.get(root_p, 0), self.rang.get(root_c, 0) + 1)
+        
+        return True
 
     def union(self, item1, item2):
         """

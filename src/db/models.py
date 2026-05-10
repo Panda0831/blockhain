@@ -12,17 +12,19 @@ class User(Base):
     Synchronisé avec le modèle métier Acteur.
     """
 
-    __rtablename__ = "users"
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
     role = Column(String)  # ex: UNIVERSITE, RECOLTEUR
     district = Column(String)  # ex: Antalaha, Toliara
     public_key = Column(String, unique=True)
 
     # Relations ORM
     transactions_envoyees = relationship(
-        "Transaction", foreign_keys="Transaction.sender_id", back_populates="expediteur"
+        "Transaction", foreign_keys="Transaction.expediteur_id", back_populates="expediteur"
     )
     transactions_recues = relationship(
         "Transaction",
@@ -60,7 +62,7 @@ class Transaction(Base):
 
     # Relations ORM
     expediteur = relationship(
-        "User", foreign_keys=[sender_id], back_populates="transactions_envoyees"
+        "User", foreign_keys=[expediteur_id], back_populates="transactions_envoyees"
     )
     destinataire = relationship(
         "User", foreign_keys=[receiver_id], back_populates="transactions_recues"

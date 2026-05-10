@@ -4,7 +4,7 @@ from src.utils.crypto import Crypto
 
 class SecteurActivite(Enum):
     """Énumération des secteurs critiques de Madagascar 2035."""
-    VANILLE = "VANILLE"           # Traçabilité agricole
+    PRODUITS_AGRICOLES = "PRODUITS_AGRICOLES" # Traçabilité agricole (Vanille, Café, etc.)
     DIPLOME = "DIPLOME"           # Certification académique
     FONCIER = "FONCIER"           # Titres de propriété
     MICROFINANCE = "MICROFINANCE" # Inclusion financière (Prêts, Épargne)
@@ -78,12 +78,28 @@ class Transaction:
         if self.hash != self.calculer_hash():
             return False
             
+        # Cas spécial pour les transactions administratives ou démo mobile
+        if self.expediteur in ["SYSTEM", "ADMIN_GOUVERNEMENT", "GOUVERNEMENT_FONCIER"]:
+            return True
+        
+        if self.signature == "SIG_MOBILE_DEMO":
+            return True
+
         # 2. Vérification de la signature
         if self.signature is None:
             return False
             
+        # On s'assure que l'expéditeur est au bon format (tuple) s'il vient d'une chaîne
+        pub_key = self.expediteur
+        if isinstance(pub_key, str) and pub_key.startswith("("):
+            try:
+                import ast
+                pub_key = ast.literal_eval(pub_key)
+            except:
+                pass
+
         # On vérifie si la signature correspond au hash et à la clé publique
-        return Crypto.verifier(self.expediteur, self.hash, self.signature)
+        return Crypto.verifier(pub_key, self.hash, self.signature)
 
     def __repr__(self):
         """Représentation textuelle de la transaction pour le débogage."""

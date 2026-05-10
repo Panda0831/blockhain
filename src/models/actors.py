@@ -7,13 +7,14 @@ from src.utils.crypto import Crypto
 
 
 class RoleActeur(Enum):
-    MINISTERE = "MINISTERE"  # Autorité supérieure
     UNIVERSITE = "UNIVERSITE"  # Émetteur de diplômes
     AGENCE_FONCIERE = "FONCIER"  # Gestion des titres de propriété
     EXPORTATEUR = "EXPORTATEUR"  # Acheteur/Exportateur de produits agricoles
     RECOLTEUR = "RECOLTEUR"  # Producteur local
     INSTITUT_MICROFINANCE = "IMF"  # Émetteur de micro-crédits
     CITOYEN = "CITOYEN"  # Utilisateur final / Client
+    MINEUR = "MINEUR"  # Validateur du réseau
+    ADMIN = "ADMIN"  # Administrateur système
 
 
 @dataclass

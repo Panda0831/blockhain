@@ -1,16 +1,13 @@
 import hashlib
 import secrets
 import ecdsa
-from passlib.context import CryptContext
+import bcrypt
 
 class Crypto:
     """
     Une implémentation utilisant le module 'ecdsa' pour la signature numérique 
-    sur courbe elliptique (ECDSA) et 'passlib' pour la sécurité des mots de passe.
+    sur courbe elliptique (ECDSA) et 'bcrypt' pour la sécurité des mots de passe.
     """
-
-    # Configuration pour le hachage des mots de passe (utilisé pour l'authentification)
-    _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     # Paramètres de la courbe SECP256k1 pour compatibilité
     N = ecdsa.SECP256k1.order
@@ -20,12 +17,21 @@ class Crypto:
     @staticmethod
     def hacher_mot_de_passe(mot_de_passe: str) -> str:
         """Hache un mot de passe de manière sécurisée avec bcrypt."""
-        return Crypto._pwd_context.hash(mot_de_passe)
+        # bcrypt attend des bytes
+        password_bytes = mot_de_passe.encode('utf-8')
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password_bytes, salt)
+        return hashed.decode('utf-8')
 
     @staticmethod
     def verifier_mot_de_passe(mot_de_passe_clair: str, mot_de_passe_hache: str) -> bool:
         """Vérifie si un mot de passe correspond à son empreinte hachée."""
-        return Crypto._pwd_context.verify(mot_de_passe_clair, mot_de_passe_hache)
+        try:
+            password_bytes = mot_de_passe_clair.encode('utf-8')
+            hashed_bytes = mot_de_passe_hache.encode('utf-8')
+            return bcrypt.checkpw(password_bytes, hashed_bytes)
+        except Exception:
+            return False
 
     @staticmethod
     def generer_paire_cles():
@@ -87,7 +93,8 @@ class Crypto:
             return vk.verify(
                 signature_bytes, message.encode("utf-8"), hashfunc=hashlib.sha256
             )
-        except (ecdsa.BadSignatureError, ValueError, TypeError):
+        except Exception:
+            # En cas de n'importe quelle erreur (format, type, signature invalide), on retourne False
             return False
 
     @staticmethod
