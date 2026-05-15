@@ -1,12 +1,14 @@
-from src.algorithms.union_find import UnionFind
-from src.models.graph import DistrictsGraph
+# instances
 from src.algorithms.qlearning import QLearningValidator
+from src.algorithms.union_find import UnionFind
 from src.blockchain.blockchain import Blockchain
-
+from src.models.graph import DistrictsGraph
+from src.use_cases.produitsAgricoles import AgricultureManager
+from src.use_cases.diploma import DiplomaManager
 from src.utils.persistence import load_state
 
 # Chargement de l'état persisté
-blockchain_instance, foncier_uf, pending_land_requests = load_state()
+blockchain_instance, foncier_uf, pending_land_requests, agri_lots = load_state()
 
 # Initialisation par défaut si aucun état n'existe
 if blockchain_instance is None:
@@ -26,3 +28,12 @@ except Exception as e:
 # Instance globale pour l'IA de validation
 actions = list(graphe.districts.keys()) if graphe.districts else [1, 2, 3]
 brain = QLearningValidator(actions_possibles=actions)
+
+# Instance pour la gestion de l'Agriculture
+agriculture_manager = AgricultureManager(blockchain_instance, graphe)
+# Désactivé pour le développement : 
+# if agri_lots:
+#    agriculture_manager.lots = agri_lots
+
+# Instance pour la gestion de l'Éducation
+diploma_manager = DiplomaManager(blockchain_instance)

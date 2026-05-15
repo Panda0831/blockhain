@@ -1,76 +1,57 @@
-# 📝 TODO List - Projet Hazo Lova (L2 ESMIA)
+# 📝 TODO List - Projet Hazo Lova (Madagascar 2035)
 
-Ce document suit la progression de l'infrastructure décentralisée pour Madagascar 2035.
+Ce document suit la progression de l'infrastructure décentralisée Hazo Lova.
 
-## 🟢 PHASE 1 : Architecture & Cadrage (Terminé / En cours)
+## ✅ PHASE 1 : Fondations & Core (Terminé)
+- [x] **Blockchain Core** : Blocs, Transactions, Arbre de Merkle, Minage.
+- [x] **Sécurité** : Cryptographie ECDSA (secp256k1), Hachage Bcrypt, Signatures.
+- [x] **Algorithmes IA & Réseau** : Union-Find (Foncier), A* (Routage), Q-Learning (Validation).
+- [x] **Backend API** : Architecture FastAPI, Authentification, Rôles (Citoyen/Admin).
+- [x] **Persistance** : Sauvegarde automatique de l'état (Blockchain & Cadastre).
+- [x] **Use Case : Foncier** : Workflow complet (Demande -> Approbation -> Transfert -> Timeline).
 
-- [x] Définir les 4 secteurs critiques (Produits Agricoles, Diplômes, Foncier, Microfinance).
-- [x] Concevoir le Diagramme de Classes (PlantUML / StarUML).
-- [x] Scénariser les Cas d'Utilisation (Scénarios A, B, C).
-- [ ] Finaliser le **Dossier d'Architecture** (Exporter les diagrammes en PNG dans `/docs`).
+## 🟡 PHASE 2 : Développement des Cas d'Usage Métier (En Cours)
 
-## 📅 ORDRE DE PRIORITÉ ET DÉPENDANCES DES FICHIERS (À CODER)
+### 🌿 1. Produits Agricoles (Traçabilité Vanille)
+- [ ] **Backend** : Créer les routes pour l'enregistrement des récoltes et le suivi des lots.
+- [ ] **IA Integration** : Utiliser A* pour optimiser le transport des collecteurs vers les centres de pesage.
+- [ ] **Mobile** : Écran de scan/enregistrement pour les collecteurs et exportateurs.
+- [ ] **Blockchain** : Inscrire l'origine et la qualité sur la chaîne.
 
-1.  **Transaction** (`src/blockchain/transaction.py`)
-    - [x] Définir l'objet de base (ID, Expéditeur, Destinataire, Type, Hash).
-    - [x] Implémenter le hachage avec `hashlib`.
-    - [x] _Dépendance : Aucune._
+### 🎓 2. Éducation (Certification des Diplômes)
+- [ ] **Backend** : Route pour les Universités (Emetteurs de diplômes certifiés).
+- [ ] **Vérification** : Outil de vérification instantanée via Root de Merkle.
+- [ ] **Mobile** : Portefeuille numérique de diplômes pour le citoyen.
 
-2.  **Union-Find** (`src/algorithms/union_find.py`)
-    - [x] Implémenter les opérations `find` et `union`.
-    - [x] Ajouter la détection de conflits pour les terrains.
-    - [x] _Dépendance : Transaction._
+### 💰 3. Microfinance (Inclusion Financière)
+- [ ] **Backend** : Système de demande de prêt basé sur la réputation blockchain.
+- [ ] **Logic** : Validation des garanties (ex: utiliser un titre foncier comme garantie via Union-Find).
+- [ ] **Mobile** : Interface de suivi des remboursements et solde.
 
-3.  **Merkle Tree** (`src/blockchain/merkle_tree.py`)
-    - [x] Construire l'arbre à partir d'une liste de transactions.
-    - [x] Obtenir la racine (`root`) pour le bloc.
-    - [x] _Dépendance : Transaction._
+## 🔵 PHASE 3 : Interfaces Utilisateurs (UI/UX)
 
-4.  **Block** (`src/blockchain/block.py`)
-    - [x] Définir la structure du bloc (Index, Timestamp, Merkle Root, Previous Hash).
-    - [x] Implémenter le hachage du bloc.
-    - [x] _Dépendance : Transaction, Merkle Tree._
+### 💻 Web Dashboard (React)
+- [x] Initialisation du projet et Authentification.
+- [ ] **Vue Explorateur** : Visualisation de la blockchain (blocs et transactions).
+- [ ] **Vue Carte** : Visualisation géographique des districts (Graphe).
+- [ ] **Dashboard Admin** : Gestion globale des demandes.
 
-5.  **Blockchain** (`src/blockchain/blockchain.py`)
-    - [x] Gérer la chaîne de blocs et le consensus simple.
-    - [x] Implémenter le minage des transactions en attente.
-    - [x] _Dépendance : Block, Transaction._
+### 📱 Mobile App (React Native)
+- [x] Authentification et Navigation.
+- [x] Module Foncier complet (Certificat, Timeline, Transfert).
+- [ ] Intégration des modules Agriculture, Diplômes et Finance.
+- [ ] Finalisation du design (Palette de couleurs, animations).
 
-6.  **Graph & Districts** (`src/models/graph.py`)
-    - [x] Charger les données depuis `data/districts_mada.csv`.
-    - [x] Créer la structure de liste d'adjacence pour les 119 districts.
-    - [x] _Dépendance : Données CSV._
+## 🟠 PHASE 4 : Optimisation & Benchmarks (CRITIQUE)
+- [ ] **Benchmark IA** : Comparer Q-Learning vs Validation Aléatoire (Énergie économisée).
+- [ ] **Benchmark Réseau** : Comparer A* vs Routage standard (Temps de propagation).
+- [ ] **Rapport Technique** : Générer les graphiques de performance dans `/benchmarks`.
 
-7.  **Tas Binaire** (`src/models/heap.py`)
-    - [x] Implémenter le tas pour gérer les priorités.
-    - [x] _Dépendance : Aucune._
-
-8.  **A\*** (`src/algorithms/astar.py`)
-    - [x] Implémenter l'algorithme de routage entre les districts.
-    - [x] _Dépendance : Graph, Tas Binaire._
-
-9.  **Q-Learning** (`src/algorithms/qlearning.py`)
-    - [x] Créer l'agent pour la sélection des validateurs.
-    - [x] _Dépendance : Blockchain, Graph._
-
-## 🟠 PHASE 3 : Optimisation & Benchmarks (CRITIQUE pour la note)
-
-- [ ] Créer une **Baseline** (ex: propagation sans A\*, validation aléatoire).
-- [ ] Réaliser les tests de performance (temps de calcul, économie d'énergie).
-- [ ] Générer le tableau comparatif "Baseline vs Optimisé" dans `/benchmarks`.
-
-## 🔵 PHASE 3 : Backend API (FastAPI)
-
-- [x] Créer les schémas de données (Pydantic).
-- [x] Implémenter les routes pour la Blockchain.
-- [x] Développer les services pour les secteurs (Foncier, Diplôme, etc.).
-
-## 🔴 PHASE 4 : Prototype & Présentation
-
-- [ ] **Frontend Web (Next.js)** : Interface pro avec Tailwind CSS.
-- [ ] **Intégration API** : Appels API via Axios/Fetch vers FastAPI.
-- [ ] **Mobile (React Native)** : (Optionnel/Plus tard) Initialisation du projet mobile.
+## 🔴 PHASE 5 : Finalisation & Présentation
+- [ ] **Documentation** : Exporter les diagrammes UML finaux dans `/docs`.
+- [ ] **Rapport d'Avancement** : Mettre à jour `ETAT_AVANCEMENT_PROJET.txt`.
+- [ ] **Vidéo Démo** : Enregistrer un scénario complet (de la récolte de vanille au transfert de terrain).
+- [ ] **Mémoire Technique** : Rédaction finale pour le jury ESMIA.
 
 ---
-
-_Note : Pour chaque fonctionnalité, n'oubliez pas d'ajouter les tests unitaires dans `/tests/unit` !_
+_Dernière mise à jour : Dimanche 10 Mai 2026_

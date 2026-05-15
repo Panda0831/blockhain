@@ -22,3 +22,5 @@ export const PlusCircle = (props: any) => <MockIcon name="PlusCircle" {...props}
 export const ArrowLeftRight = (props: any) => <MockIcon name="ArrowLeftRight" {...props} />;
 export const ShieldCheck = (props: any) => <MockIcon name="ShieldCheck" {...props} />;
 export const Navigation = (props: any) => <MockIcon name="Navigation" {...props} />;
+export const Leaf = (props: any) => <MockIcon name="Leaf" {...props} />;
+export const Award = (props: any) => <MockIcon name="Award" {...props} />;

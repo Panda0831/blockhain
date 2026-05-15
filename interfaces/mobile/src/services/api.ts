@@ -1,8 +1,6 @@
 import axios from 'axios';
 
-// On utilise une adresse par défaut pour le développement local
-// '10.0.2.2' est l'adresse pour accéder au localhost de la machine hôte depuis un émulateur Android
-// Pour un appareil physique sur le même réseau Wifi, utilisez l'IP de votre machine.
+// Adresse IP de la machine hôte pour le développement mobile
 const API_URL = 'http://192.168.88.250:8000';
 
 const api = axios.create({
@@ -41,47 +39,11 @@ export const blockchainService = {
     const response = await api.post('/api/blockchain/mine');
     return response.data;
   },
-  verifyTransaction: async (txHash: string) => {
-    const response = await api.get(`/api/blockchain/verify/${txHash}`);
-    return response.data;
-  },
-  createTransaction: async (txData: any) => {
-    const response = await api.post('/api/blockchain/transactions', txData);
-    return response.data;
-  },
 };
 
 export const landService = {
-  getParcel: async (parcelId: string) => {
-    const response = await api.get(`/api/land/${parcelId}`);
-    return response.data;
-  },
-  getHistory: async (parcelId: string) => {
-    const response = await api.get(`/api/land/history/${parcelId}`);
-    return response.data;
-  },
   getParcelsByOwner: async (publicKey: string) => {
     const response = await api.get(`/api/land/owner/${publicKey}`);
-    return response.data;
-  },
-  submitRequest: async (requestData: any) => {
-    const response = await api.post('/api/land/request', requestData);
-    return response.data;
-  },
-  getPending: async () => {
-    const response = await api.get('/api/land/pending');
-    return response.data;
-  },
-  approveRequest: async (requestId: number) => {
-    const response = await api.post(`/api/land/approve/${requestId}`);
-    return response.data;
-  },
-  registerParcel: async (registrationData: any) => {
-    const response = await api.post('/api/land/register', registrationData);
-    return response.data;
-  },
-  transferParcel: async (transferData: any) => {
-    const response = await api.post('/api/land/transfer', transferData);
     return response.data;
   },
 };
@@ -91,14 +53,41 @@ export const algoService = {
     const response = await api.get('/api/algo/districts');
     return response.data;
   },
-  findPath: async (startId: number, endId: number) => {
-    const response = await api.post('/api/algo/path', { start_id: startId, end_id: endId });
+};
+
+export const educationService = {
+  certifyDiploma: async (diplomaData: { student_id: string; degree_title: string; university: string; year: number }) => {
+    const response = await api.post('/api/education/certify', diplomaData);
     return response.data;
   },
-  selectValidator: async (currentDistrictId: number) => {
-    const response = await api.post('/api/algo/select-validator', { current_district_id: currentDistrictId });
+  getDiplomaProof: async (diplomaId: string) => {
+    const response = await api.get(`/api/education/proof/${diplomaId}`);
+    return response.data;
+  },
+  getDiploma: async (diplomaId: string) => {
+    const response = await api.get(`/api/education/diploma/${diplomaId}`);
     return response.data;
   },
 };
+
+export const agriService = {
+  recordHarvest: async (harvestData: any) => {
+    const response = await api.post('/api/agriculture/harvest', harvestData);
+    return response.data;
+  },
+  optimizeTransport: async (transportData: { lot_id: string; destination: string }) => {
+    const response = await api.post('/api/agriculture/transport', transportData);
+    return response.data;
+  },
+  getLot: async (lotId: string) => {
+    const response = await api.get(`/api/agriculture/lot/${lotId}`);
+    return response.data;
+  },
+  getAllLots: async () => {
+    const response = await api.get('/api/agriculture/all');
+    return response.data;
+  },
+};
+
 
 export default api;

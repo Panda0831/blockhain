@@ -6,7 +6,9 @@ import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import LandScreen from '../screens/LandScreen';
 import AlgoScreen from '../screens/AlgoScreen';
-import { Activity, Map as MapIcon, Brain } from '../components/Icons';
+import AgriScreen from '../screens/AgriScreen';
+import DiplomaScreen from '../screens/DiplomaScreen';
+import { Activity, Map as MapIcon, Brain, Leaf, Award } from '../components/Icons';
 import { palette } from '../theme/palette';
 
 const Stack = createNativeStackNavigator();
@@ -53,12 +55,32 @@ function MainTabs({ route }: any) {
         }}
       />
       <Tab.Screen 
+        name="Agri" 
+        component={AgriScreen} 
+        initialParams={{ user }}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Leaf color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen 
         name="Algo" 
         component={AlgoScreen} 
         initialParams={{ user }}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Brain color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Diplôme" 
+        component={DiplomaScreen} 
+        initialParams={{ user }}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Award color={color} size={size} />
           ),
         }}
       />

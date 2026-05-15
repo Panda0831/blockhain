@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
 from src.blockchain.transaction import Transaction, SecteurActivite
-from src.api.instances import foncier_uf, blockchain_instance, pending_land_requests
+from src.api.instances import foncier_uf, blockchain_instance, pending_land_requests, agriculture_manager
 from src.utils.persistence import save_state
 
 router = APIRouter()
@@ -45,7 +45,7 @@ async def submit_land_request(data: LandRegistrationRequest):
         "status": "PENDING"
     }
     pending_land_requests.append(new_request)
-    save_state(blockchain_instance, foncier_uf, pending_land_requests)
+    save_state(blockchain_instance, foncier_uf, pending_land_requests, agriculture_manager.lots)
     return {"status": "SUCCESS", "message": "Demande envoyée", "request_id": request_id}
 
 @router.get("/pending")
@@ -86,7 +86,7 @@ async def approve_land_request(request_id: int):
         request["status"] = "APPROVED"
         request["generated_parcel_id"] = generated_parcel_id
         
-        save_state(blockchain_instance, foncier_uf, pending_land_requests)
+        save_state(blockchain_instance, foncier_uf, pending_land_requests, agriculture_manager.lots)
         
         return {
             "status": "SUCCESS", 
@@ -131,7 +131,7 @@ async def transfer_land(data: LandTransfer):
             raise HTTPException(status_code=400, detail="Transaction ou signature invalide")
 
         blockchain_instance.miner_transactions_en_attente(adresse_mineur="GOUVERNEMENT_POOL")
-        save_state(blockchain_instance, foncier_uf, pending_land_requests)
+        save_state(blockchain_instance, foncier_uf, pending_land_requests, agriculture_manager.lots)
         
         return {
             "status": "SUCCESS",

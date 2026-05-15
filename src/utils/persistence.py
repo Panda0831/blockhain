@@ -6,7 +6,7 @@ from src.algorithms.union_find import UnionFind
 
 DATA_DIR = "data/persistence"
 
-def save_state(blockchain, foncier_uf, pending_requests):
+def save_state(blockchain, foncier_uf, pending_requests, agri_lots=None):
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
     
@@ -18,15 +18,21 @@ def save_state(blockchain, foncier_uf, pending_requests):
         
     with open(os.path.join(DATA_DIR, "pending_requests.json"), "w") as f:
         json.dump(pending_requests, f)
+    
+    if agri_lots is not None:
+        with open(os.path.join(DATA_DIR, "agri_lots.pkl"), "wb") as f:
+            pickle.dump(agri_lots, f)
 
 def load_state():
     blockchain = None
     foncier_uf = None
     pending_requests = []
+    agri_lots = {}
     
     bc_path = os.path.join(DATA_DIR, "blockchain.pkl")
     uf_path = os.path.join(DATA_DIR, "foncier_uf.pkl")
     pr_path = os.path.join(DATA_DIR, "pending_requests.json")
+    ag_path = os.path.join(DATA_DIR, "agri_lots.pkl")
     
     if os.path.exists(bc_path):
         with open(bc_path, "rb") as f:
@@ -39,5 +45,9 @@ def load_state():
     if os.path.exists(pr_path):
         with open(pr_path, "r") as f:
             pending_requests = json.load(f)
+
+    if os.path.exists(ag_path):
+        with open(ag_path, "rb") as f:
+            agri_lots = pickle.load(f)
             
-    return blockchain, foncier_uf, pending_requests
+    return blockchain, foncier_uf, pending_requests, agri_lots

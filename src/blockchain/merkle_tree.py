@@ -1,3 +1,4 @@
+from typing import List, Dict
 from src.utils.crypto import Crypto
 
 
@@ -46,6 +47,34 @@ class MerkleTree:
             nouveaux_hashes.append(hash_combine)
 
         return self._construire_racine(nouveaux_hashes)
+
+    def get_proof(self, index: int) -> List[Dict[str, str]]:
+        """Génère la preuve de Merkle pour une transaction à un index donné."""
+        hashes = [tx.hash for tx in self.transactions]
+        proof = []
+
+        current_layer = hashes
+        while len(current_layer) > 1:
+            if index % 2 == 0:
+                # Si index pair, le voisin est index+1
+                neighbor_idx = index + 1 if index + 1 < len(current_layer) else index
+                proof.append({"position": "right", "hash": current_layer[neighbor_idx]})
+            else:
+                # Si index impair, le voisin est index-1
+                neighbor_idx = index - 1
+                proof.append({"position": "left", "hash": current_layer[neighbor_idx]})
+
+            # Passer à la couche supérieure
+            new_layer = []
+            for i in range(0, len(current_layer), 2):
+                h1 = current_layer[i]
+                h2 = current_layer[i + 1] if i + 1 < len(current_layer) else current_layer[i]
+                new_layer.append(Crypto.hacher_sha256(h1 + h2))
+
+            current_layer = new_layer
+            index //= 2
+
+        return proof
 
     def obtenir_racine(self):
         """Retourne la racine de l'arbre de Merkle (Merkle Root)."""
