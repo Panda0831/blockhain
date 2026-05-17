@@ -35,8 +35,14 @@ export const blockchainService = {
     const response = await api.get('/api/blockchain/blocks');
     return response.data;
   },
-  mine: async () => {
-    const response = await api.post('/api/blockchain/mine');
+  mine: async (publicKey: string) => {
+    const response = await api.post('/api/blockchain/mine', {}, {
+      headers: { 'public_key': publicKey }
+    });
+    return response.data;
+  },
+  getPendingTransactions: async () => {
+    const response = await api.get('/api/blockchain/pending-transactions');
     return response.data;
   },
 };
@@ -44,6 +50,14 @@ export const blockchainService = {
 export const landService = {
   getParcelsByOwner: async (publicKey: string) => {
     const response = await api.get(`/api/land/owner/${publicKey}`);
+    return response.data;
+  },
+  getPending: async () => {
+    const response = await api.get('/api/land/pending');
+    return response.data;
+  },
+  approve: async (requestId: number) => {
+    const response = await api.post(`/api/land/approve/${requestId}`);
     return response.data;
   },
 };
@@ -56,16 +70,41 @@ export const algoService = {
 };
 
 export const educationService = {
-  certifyDiploma: async (diplomaData: { student_id: string; degree_title: string; university: string; year: number }) => {
-    const response = await api.post('/api/education/certify', diplomaData);
+  requestDiploma: async (diplomaData: { 
+    student_id: string; 
+    degree_title: string; 
+    university: string; 
+    year: number;
+    document_hash?: string;
+  }) => {
+    const response = await api.post('/api/education/request', diplomaData);
+    return response.data;
+  },
+  getPendingDiplomas: async () => {
+    const response = await api.get('/api/education/pending');
+    return response.data;
+  },
+  approveDiploma: async (requestId: number) => {
+    const response = await api.post(`/api/education/approve/${requestId}`);
     return response.data;
   },
   getDiplomaProof: async (diplomaId: string) => {
     const response = await api.get(`/api/education/proof/${diplomaId}`);
     return response.data;
   },
-  getDiploma: async (diplomaId: string) => {
-    const response = await api.get(`/api/education/diploma/${diplomaId}`);
+};
+
+export const microfinanceService = {
+  sendMoney: async (data: { sender_id: string; receiver_id: string; amount: number; description: string }) => {
+    const response = await api.post('/api/microfinance/send', data);
+    return response.data;
+  },
+  getPendingTransfers: async (userId: string) => {
+    const response = await api.get(`/api/microfinance/pending/${userId}`);
+    return response.data;
+  },
+  acceptTransfer: async (transferId: number) => {
+    const response = await api.post(`/api/microfinance/accept/${transferId}`);
     return response.data;
   },
 };

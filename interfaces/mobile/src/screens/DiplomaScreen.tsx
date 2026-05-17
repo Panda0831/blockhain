@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,13 +8,20 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  FlatList,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette } from '../theme/palette';
 import { educationService } from '../services/api';
-import { Award, ShieldCheck, PlusCircle } from '../components/Icons';
+import { Award, ShieldCheck, PlusCircle, CheckCircle, Database } from '../components/Icons';
+import { FadeInView, SkeletonLoader } from '../components/Animations';
 
 export default function DiplomaScreen({ route }: any) {
-  const [activeTab, setActiveTab] = useState<'certify' | 'verify'>('certify');
+  const user = route.params?.user;
+  const userRole = user?.role || 'CITOYEN';
+  const isAdmin = ['ADMIN', 'UNIVERSITE', 'MINISTERE'].includes(userRole.toUpperCase());
+
+  const [activeTab, setActiveTab] = useState<'request' | 'verify' | 'admin'>(isAdmin ? 'admin' : 'request');
   const [loading, setLoading] = useState(false);
   
   // Form fields
@@ -23,25 +29,74 @@ export default function DiplomaScreen({ route }: any) {
   const [degreeTitle, setDegreeTitle] = useState('');
   const [university, setUniversity] = useState('');
   const [year, setYear] = useState('');
+  const [docHash, setDocHash] = useState('');
   
   // Verify fields
   const [diplomaId, setDiplomaId] = useState('');
   const [proof, setProof] = useState<any>(null);
 
-  const handleCertify = async () => {
-    if (!studentId || !degreeTitle || !university || !year) return;
+  // Admin fields
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (activeTab === 'admin') {
+      fetchPendingRequests();
+    }
+  }, [activeTab]);
+
+  const fetchPendingRequests = async () => {
     setLoading(true);
     try {
-      const res = await educationService.certifyDiploma({
+      const data = await educationService.getPendingDiplomas();
+      setPendingRequests(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const simulateFileUpload = () => {
+    const mockHash = "pdf_hash_" + Math.random().toString(16).slice(2);
+    setDocHash(mockHash);
+    Alert.alert("Fichier joint", "Le PDF a été analysé et haché.");
+  };
+
+  const handleRequest = async () => {
+    if (!studentId || !degreeTitle || !university || !year) {
+      Alert.alert('Champs requis', 'Veuillez remplir tous les champs');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await educationService.requestDiploma({
         student_id: studentId,
         degree_title: degreeTitle,
         university: university,
-        year: parseInt(year)
+        year: parseInt(year),
+        document_hash: docHash || undefined
       });
-      Alert.alert('Succès', `Diplôme certifié ! ID: ${res.diploma_id}`);
-      setDiplomaId(res.diploma_id);
+      Alert.alert('Succès', `Demande envoyée !`);
+      setStudentId('');
+      setDegreeTitle('');
+      setUniversity('');
+      setYear('');
+      setDocHash('');
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de certifier le diplôme');
+      Alert.alert('Erreur', 'Impossible d\'envoyer la demande');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (requestId: number) => {
+    setLoading(true);
+    try {
+      const res = await educationService.approveDiploma(requestId);
+      Alert.alert('Succès', `Diplôme certifié sur la blockchain !`);
+      fetchPendingRequests();
+    } catch (error) {
+      Alert.alert('Erreur', 'Échec de l\'approbation');
     } finally {
       setLoading(false);
     }
@@ -53,13 +108,29 @@ export default function DiplomaScreen({ route }: any) {
     try {
       const res = await educationService.getDiplomaProof(diplomaId);
       setProof(res);
-      Alert.alert('Succès', 'Preuve de Merkle récupérée avec succès');
     } catch (error) {
-      Alert.alert('Erreur', 'Diplôme non trouvé ou preuve manquante');
+      Alert.alert('Erreur', 'Diplôme non trouvé');
     } finally {
       setLoading(false);
     }
   };
+
+  const renderAdminItem = ({ item }: { item: any }) => (
+    <FadeInView style={styles.card}>
+      <View style={styles.cardInfo}>
+        <Text style={styles.cardTitle}>{item.degree_title}</Text>
+        <Text style={styles.cardSub}>{item.university} - {item.year}</Text>
+        <Text style={styles.cardId}>ID: {item.student_id}</Text>
+      </View>
+      <TouchableOpacity 
+        style={styles.approveBtn} 
+        onPress={() => handleApprove(item.id)}
+        disabled={loading}
+      >
+        <CheckCircle color="white" size={20} />
+      </TouchableOpacity>
+    </FadeInView>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -70,10 +141,10 @@ export default function DiplomaScreen({ route }: any) {
 
       <View style={styles.tabBar}>
         <TouchableOpacity 
-          style={[styles.tab, activeTab === 'certify' && styles.activeTab]} 
-          onPress={() => setActiveTab('certify')}
+          style={[styles.tab, activeTab === 'request' && styles.activeTab]} 
+          onPress={() => setActiveTab('request')}
         >
-          <Text style={[styles.tabText, activeTab === 'certify' && styles.activeTabText]}>Certification</Text>
+          <Text style={[styles.tabText, activeTab === 'request' && styles.activeTabText]}>Demande</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.tab, activeTab === 'verify' && styles.activeTab]} 
@@ -81,72 +152,142 @@ export default function DiplomaScreen({ route }: any) {
         >
           <Text style={[styles.tabText, activeTab === 'verify' && styles.activeTabText]}>Vérification</Text>
         </TouchableOpacity>
+        {isAdmin && (
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'admin' && styles.activeTab]} 
+            onPress={() => setActiveTab('admin')}
+          >
+            <Text style={[styles.tabText, activeTab === 'admin' && styles.activeTabText]}>Admin</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {activeTab === 'certify' && (
-          <View style={styles.form}>
-            <Text style={styles.sectionTitle}>Certifier un Diplôme</Text>
-            <Text style={styles.label}>ID Étudiant</Text>
-            <TextInput style={styles.input} value={studentId} onChangeText={setStudentId} placeholder="Ex: STUDENT_001" />
-            
-            <Text style={styles.label}>Titre du diplôme</Text>
-            <TextInput style={styles.input} value={degreeTitle} onChangeText={setDegreeTitle} placeholder="Ex: Licence Informatique" />
-            
-            <Text style={styles.label}>Université</Text>
-            <TextInput style={styles.input} value={university} onChangeText={setUniversity} placeholder="Ex: Univ Tana" />
+      <View style={styles.content}>
+        {activeTab === 'request' && (
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+            <FadeInView style={styles.form}>
+              <Text style={styles.sectionTitle}>Demander une Certification</Text>
+              
+              <Text style={styles.label}>ID Étudiant</Text>
+              <TextInput style={styles.input} value={studentId} onChangeText={setStudentId} placeholder="Ex: STUDENT_001" />
+              
+              <Text style={styles.label}>Titre du diplôme</Text>
+              <TextInput style={styles.input} value={degreeTitle} onChangeText={setDegreeTitle} placeholder="Ex: Licence Informatique" />
+              
+              <Text style={styles.label}>Université</Text>
+              <TextInput style={styles.input} value={university} onChangeText={setUniversity} placeholder="Ex: Univ Tana" />
 
-            <Text style={styles.label}>Année</Text>
-            <TextInput style={styles.input} value={year} onChangeText={setYear} keyboardType="numeric" placeholder="Ex: 2035" />
+              <Text style={styles.label}>Année</Text>
+              <TextInput style={styles.input} value={year} onChangeText={setYear} keyboardType="numeric" placeholder="Ex: 2026" />
 
-            <TouchableOpacity style={styles.button} onPress={handleCertify} disabled={loading}>
-              {loading ? <ActivityIndicator color="white" /> : <><PlusCircle color="white" size={20} /><Text style={styles.buttonText}>Certifier sur Blockchain</Text></>}
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity 
+                style={[styles.input, styles.attachmentBtn, docHash ? styles.attachmentActive : null]} 
+                onPress={simulateFileUpload}
+              >
+                <Text style={{ color: docHash ? palette.accent : palette.gray }}>
+                  {docHash ? "📄 Document PDF joint" : "📁 Joindre le scan du diplôme (PDF)"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.button} onPress={handleRequest} disabled={loading}>
+                {loading ? <ActivityIndicator color="white" /> : <><PlusCircle color="white" size={20} /><Text style={styles.buttonText}>Envoyer la Demande</Text></>}
+              </TouchableOpacity>
+            </FadeInView>
+          </ScrollView>
         )}
 
         {activeTab === 'verify' && (
-          <View style={styles.form}>
+          <FadeInView style={styles.form}>
             <Text style={styles.sectionTitle}>Vérifier l'Authenticité</Text>
             <Text style={styles.label}>ID du Diplôme</Text>
             <TextInput style={styles.input} value={diplomaId} onChangeText={setDiplomaId} placeholder="Ex: DIP-STUDENT_001-2035" />
 
             <TouchableOpacity style={[styles.button, { backgroundColor: palette.secondary }]} onPress={handleVerify} disabled={loading}>
-              {loading ? <ActivityIndicator color="white" /> : <><ShieldCheck color="white" size={20} /><Text style={styles.buttonText}>Générer Preuve Merkle</Text></>}
+              {loading ? <ActivityIndicator color="white" /> : <><ShieldCheck color="white" size={20} /><Text style={styles.buttonText}>Vérifier sur Blockchain</Text></>}
             </TouchableOpacity>
 
             {proof && (
               <View style={styles.result}>
                 <Text style={styles.bold}>Racine Merkle (Root):</Text>
-                <Text style={styles.resultText} numberOfLines={2}>{proof.root}</Text>
+                <Text style={styles.resultText} numberOfLines={1}>{proof.root}</Text>
                 <Text style={[styles.bold, { marginTop: 10 }]}>Hash Transaction:</Text>
-                <Text style={styles.resultText} numberOfLines={2}>{proof.tx_hash}</Text>
+                <Text style={styles.resultText} numberOfLines={1}>{proof.tx_hash}</Text>
               </View>
             )}
+          </FadeInView>
+        )}
+
+        {activeTab === 'admin' && (
+          <View style={{ flex: 1 }}>
+            <FlatList
+              data={pendingRequests}
+              renderItem={renderAdminItem}
+              keyExtractor={(item) => item.id.toString()}
+              ListEmptyComponent={<Text style={styles.empty}>Aucune demande en attente</Text>}
+              onRefresh={fetchPendingRequests}
+              refreshing={loading}
+            />
           </View>
         )}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: palette.background },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 20, backgroundColor: 'white' },
-  title: { fontSize: 24, fontWeight: 'bold', marginLeft: 10, color: palette.text },
-  tabBar: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: palette.lightGray, backgroundColor: 'white' },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 20, backgroundColor: palette.surface },
+  title: { fontSize: 24, fontWeight: 'bold', marginLeft: 10, color: palette.ink },
+  tabBar: { flexDirection: 'row', backgroundColor: palette.surface, borderBottomWidth: 1, borderBottomColor: palette.lightGray },
   tab: { flex: 1, padding: 15, alignItems: 'center' },
   activeTab: { borderBottomWidth: 3, borderBottomColor: palette.accent },
   tabText: { color: palette.gray, fontWeight: '600' },
   activeTabText: { color: palette.accent },
-  content: { padding: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: palette.text },
-  form: { backgroundColor: 'white', borderRadius: 12, padding: 20, elevation: 2 },
+  content: { flex: 1, padding: 20 },
+  card: { 
+    backgroundColor: palette.surface, 
+    borderRadius: 16, 
+    padding: 15, 
+    marginBottom: 12, 
+    flexDirection: 'row', 
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: palette.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5
+  },
+  cardInfo: { flex: 1 },
+  cardTitle: { fontSize: 16, fontWeight: 'bold', color: palette.ink },
+  cardSub: { fontSize: 13, color: palette.gray, marginTop: 2 },
+  cardId: { fontSize: 11, color: palette.accent, marginTop: 4, fontWeight: '600' },
+  form: { backgroundColor: palette.surface, borderRadius: 20, padding: 20, elevation: 2 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: palette.ink },
   label: { fontSize: 14, fontWeight: '600', marginBottom: 8, color: palette.gray },
-  input: { borderWidth: 1, borderColor: palette.lightGray, borderRadius: 8, padding: 12, marginBottom: 15, backgroundColor: '#F9FAFB' },
-  button: { backgroundColor: palette.accent, borderRadius: 8, padding: 15, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  input: { 
+    borderWidth: 1.5, 
+    borderColor: palette.lightGray, 
+    borderRadius: 12, 
+    padding: 12, 
+    marginBottom: 15, 
+    backgroundColor: palette.background,
+    color: palette.ink
+  },
+  attachmentBtn: { borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', height: 50 },
+  attachmentActive: { borderColor: palette.accent, backgroundColor: palette.accentTransparent },
+  button: { 
+    backgroundColor: palette.accent, 
+    borderRadius: 14, 
+    padding: 15, 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    marginTop: 10
+  },
   buttonText: { color: 'white', fontWeight: 'bold', marginLeft: 10 },
-  result: { marginTop: 20, padding: 15, backgroundColor: '#E8F5E9', borderRadius: 8 },
-  resultText: { fontSize: 12, color: '#2E7D32', marginTop: 5 },
-  bold: { fontWeight: 'bold' },
+  approveBtn: { backgroundColor: palette.accent, padding: 10, borderRadius: 12 },
+  result: { marginTop: 20, padding: 15, backgroundColor: palette.accentTransparent, borderRadius: 12 },
+  resultText: { fontSize: 10, color: palette.accent, marginTop: 5, fontWeight: 'bold' },
+  bold: { fontWeight: 'bold', fontSize: 12, color: palette.ink },
+  empty: { textAlign: 'center', marginTop: 40, color: palette.gray }
 });

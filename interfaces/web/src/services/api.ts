@@ -4,9 +4,24 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
+});
+
+// Intercepteur pour ajouter la clé publique dans les headers
+api.interceptors.request.use((config) => {
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    const user = JSON.parse(userStr);
+    if (user.public_key) {
+      config.headers['public-key'] = user.public_key;
+    }
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 export const authService = {
@@ -16,6 +31,134 @@ export const authService = {
   },
   signUp: async (userData: any) => {
     const response = await api.post("/api/auth/signup", userData);
+    return response.data;
+  },
+  getUsers: async () => {
+    const response = await api.get("/api/auth/users");
+    return response.data;
+  },
+};
+
+export const blockchainService = {
+  getStatus: async () => {
+    const response = await api.get("/api/blockchain/");
+    return response.data;
+  },
+  getBlocks: async () => {
+    const response = await api.get("/api/blockchain/blocks");
+    return response.data;
+  },
+  mine: async (publicKey: string) => {
+    const response = await api.post("/api/blockchain/mine", {}, {
+      headers: { 'public_key': publicKey }
+    });
+    return response.data;
+  },
+  getPendingTransactions: async () => {
+    const response = await api.get("/api/blockchain/pending-transactions");
+    return response.data;
+  },
+};
+
+export const landService = {
+  getParcelsByOwner: async (publicKey: string) => {
+    const response = await api.get(`/api/land/owner/${publicKey}`);
+    return response.data;
+  },
+  getPending: async () => {
+    const response = await api.get("/api/land/pending");
+    return response.data;
+  },
+  approve: async (requestId: number) => {
+    const response = await api.post(`/api/land/approve/${requestId}`);
+    return response.data;
+  },
+  request: async (requestData: { requester_id: string; document_url: string; description?: string }) => {
+    const response = await api.post("/api/land/request", requestData);
+    return response.data;
+  },
+  transfer: async (transferData: { 
+    parcel_id: string; 
+    seller_id: string; 
+    buyer_id: string; 
+    signature: string; 
+    price: number; 
+  }) => {
+    const response = await api.post("/api/land/transfer", transferData);
+    return response.data;
+  },
+  getHistory: async (parcelId: string) => {
+    const response = await api.get(`/api/land/history/${parcelId}`);
+    return response.data;
+  },
+  getDetails: async (parcelId: string) => {
+    const response = await api.get(`/api/land/${parcelId}`);
+    return response.data;
+  },
+};
+
+export const algoService = {
+  getDistricts: async () => {
+    const response = await api.get("/api/algo/districts");
+    return response.data;
+  },
+};
+
+export const educationService = {
+  requestDiploma: async (diplomaData: { 
+    student_id: string; 
+    degree_title: string; 
+    university: string; 
+    year: number;
+    document_hash?: string;
+  }) => {
+    const response = await api.post("/api/education/request", diplomaData);
+    return response.data;
+  },
+  getPendingDiplomas: async () => {
+    const response = await api.get("/api/education/pending");
+    return response.data;
+  },
+  approveDiploma: async (requestId: number) => {
+    const response = await api.post(`/api/education/approve/${requestId}`);
+    return response.data;
+  },
+  getDiplomaProof: async (diplomaId: string) => {
+    const response = await api.get(`/api/education/proof/${diplomaId}`);
+    return response.data;
+  },
+};
+
+export const microfinanceService = {
+  sendMoney: async (data: { sender_id: string; receiver_id: string; amount: number; description: string }) => {
+    const response = await api.post("/api/microfinance/send", data);
+    return response.data;
+  },
+  getPendingTransfers: async (userId: string) => {
+    const response = await api.get(`/api/microfinance/pending/${userId}`);
+    return response.data;
+  },
+  acceptTransfer: async (transferId: number) => {
+    const response = await api.post(`/api/microfinance/accept/${transferId}`);
+    return response.data;
+  },
+};
+
+export const agriService = {
+  recordHarvest: async (harvestData: any) => {
+    const response = await api.post("/api/agriculture/harvest", harvestData);
+    return response.data;
+  },
+  optimizeTransport: async (transportData: { lot_id: string; destination: string }) => {
+    const response = await api.post("/api/agriculture/transport", transportData);
+    return response.data;
+  },
+  getLot: async (lotId: string) => {
+    const response = await api.get(`/api/agriculture/lot/${lotId}`);
+    return response.data;
+  },
+  getAllLots: async () => {
+    const response = await api.get("/api/agriculture/all");
     return response.data;
   },
 };

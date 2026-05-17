@@ -5,30 +5,31 @@ import { palette } from '../theme/palette';
 interface DashboardCardProps {
   title: string;
   value: string;
-  detail: string;
   icon: React.ReactNode;
+  color: string;
 }
 
-export function DashboardCard({ title, value, detail, icon }: DashboardCardProps) {
+export default function DashboardCard({ title, value, icon, color }: DashboardCardProps) {
   return (
     <View style={styles.card}>
-      <View style={styles.cardIcon}>{icon}</View>
+      <View style={[styles.cardIcon, { backgroundColor: color + '15' }]}>{icon}</View>
       <Text style={styles.cardTitle}>{title}</Text>
       <Text style={styles.cardValue}>{value}</Text>
-      <Text style={styles.cardDetail}>{detail}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    width: '48%',
+    flex: 1,
+    minWidth: '45%',
     backgroundColor: palette.lightGray,
     borderWidth: 1,
     borderColor: palette.border,
     borderRadius: 22,
     padding: 16,
     marginBottom: 14,
+    marginHorizontal: 4,
   },
   cardIcon: {
     width: 38,

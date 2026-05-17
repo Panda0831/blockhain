@@ -2,7 +2,14 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Optional
 
-from src.api.instances import blockchain_instance, agriculture_manager, foncier_uf, pending_land_requests
+from src.api.instances import (
+    blockchain_instance, 
+    agriculture_manager, 
+    foncier_uf, 
+    pending_land_requests,
+    pending_diploma_requests,
+    microfinance_manager
+)
 from src.use_cases.produitsAgricoles import AgriculturalLot
 from src.utils.persistence import save_state
 
@@ -29,7 +36,14 @@ async def record_harvest(data: HarvestRequest):
         raise HTTPException(status_code=500, detail="Erreur lors de l'enregistrement")
     
     blockchain_instance.miner_transactions_en_attente(adresse_mineur="AGRI_POOL")
-    save_state(blockchain_instance, foncier_uf, pending_land_requests, agriculture_manager.lots)
+    save_state(
+        blockchain_instance, 
+        foncier_uf, 
+        pending_land_requests, 
+        agriculture_manager.lots, 
+        pending_diploma_requests,
+        microfinance_manager.pending_transfers
+    )
     return {"status": "SUCCESS", "lot": lot}
 
 @router.post("/transport")
@@ -44,7 +58,14 @@ async def optimize_transport(request: Request, data: TransportRequest):
         raise HTTPException(status_code=404, detail="Lot non trouvé ou erreur de routage")
     
     blockchain_instance.miner_transactions_en_attente(adresse_mineur="TRANS_POOL")
-    save_state(blockchain_instance, foncier_uf, pending_land_requests, agriculture_manager.lots)
+    save_state(
+        blockchain_instance, 
+        foncier_uf, 
+        pending_land_requests, 
+        agriculture_manager.lots, 
+        pending_diploma_requests,
+        microfinance_manager.pending_transfers
+    )
     return {"status": "SUCCESS", "lot": lot}
 
 @router.get("/lot/{lot_id}")

@@ -9,6 +9,8 @@ from src.api.routes import (
     blockchain_routes,
     land_routes,
     education_routes,
+    microfinance_routes,
+    notification_routes,
 )
 
 app = FastAPI(
@@ -45,6 +47,12 @@ app.include_router(
 )
 app.include_router(
     education_routes.router, prefix="/api/education", tags=["Éducation"]
+)
+app.include_router(
+    microfinance_routes.router, prefix="/api/microfinance", tags=["Microfinance"]
+)
+app.include_router(
+    notification_routes.router, prefix="/api/notifications", tags=["Notifications"]
 )
 app.include_router(
     algorithm_routes.router, prefix="/api/algo", tags=["Intelligence & Réseau"]

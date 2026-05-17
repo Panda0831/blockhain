@@ -4,14 +4,20 @@ import { palette } from '../theme/palette';
 
 interface SignalRowProps {
   label: string;
-  value: string;
+  status: string;
+  icon: React.ReactNode;
 }
 
-export function SignalRow({ label, value }: SignalRowProps) {
+export default function SignalRow({ label, status, icon }: SignalRowProps) {
   return (
     <View style={styles.signalRow}>
-      <Text style={styles.signalLabel}>{label}</Text>
-      <Text style={styles.signalValue}>{value}</Text>
+      <View style={styles.signalLeft}>
+        <View style={styles.iconContainer}>{icon}</View>
+        <Text style={styles.signalLabel}>{label}</Text>
+      </View>
+      <View style={styles.statusBadge}>
+        <Text style={styles.statusText}>{status}</Text>
+      </View>
     </View>
   );
 }
@@ -21,17 +27,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 11,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(24, 36, 54, 0.05)',
+  },
+  signalLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    marginRight: 10,
   },
   signalLabel: {
     fontSize: 14,
-    color: 'rgba(243, 238, 223, 0.76)',
-    flex: 1,
-    paddingRight: 12,
+    color: palette.ink,
+    fontWeight: '600',
   },
-  signalValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: palette.background,
+  statusBadge: {
+    backgroundColor: palette.accentTransparent,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: palette.accent,
   },
 });

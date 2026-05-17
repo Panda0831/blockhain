@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,6 +8,7 @@ import {
   ActivityIndicator,
   FlatList,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette } from '../theme/palette';
 import { algoService } from '../services/api';
 import { MapPin, Navigation, Brain, Activity } from '../components/Icons';
@@ -75,7 +75,7 @@ export default function AlgoScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Réseau Intelligent</Text>
           <Text style={styles.subtitle}>Optimisation A* & Q-Learning</Text>

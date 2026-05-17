@@ -11,15 +11,16 @@ class DiplomaManager:
         self.blockchain = blockchain
         self.diplomas: Dict[str, dict] = {} # diploma_id -> info
 
-    def register_diploma(self, student_id: str, degree_title: str, university: str, year: int):
-        """Enregistre un diplôme sur la blockchain."""
+    def register_diploma(self, student_id: str, degree_title: str, university: str, year: int, document_hash: str = None):
+        """Enregistre un diplôme sur la blockchain avec son hash de document."""
         diploma_id = f"DIP-{student_id}-{year}"
         
         diploma_data = {
             "student_id": student_id,
             "title": degree_title,
             "university": university,
-            "year": year
+            "year": year,
+            "document_hash": document_hash
         }
         
         tx = Transaction(
@@ -27,7 +28,7 @@ class DiplomaManager:
             destinataire=student_id,
             donnees=diploma_data,
             secteur=SecteurActivite.DIPLOME,
-            description=f"Diplôme {degree_title} émis par {university}",
+            description=f"Diplôme {degree_title} certifié (Hash PDF: {document_hash[:10] if document_hash else 'N/A'})",
             montant=0
         )
         tx.signature = "SIG_ADMIN_DIPLOME"

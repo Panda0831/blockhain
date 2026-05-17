@@ -1,6 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
-from src.api.instances import blockchain_instance
+from src.api.instances import (
+    blockchain_instance, foncier_uf, pending_land_requests, agriculture_manager, 
+    pending_diploma_requests, microfinance_manager
+)
+from src.utils.persistence import save_state
 from src.blockchain.transaction import Transaction, SecteurActivite as BTSecteur
 from src.api.schemas.blockchain import BlockchainSummary, BlockResponse, TransactionCreate, TransactionResponse
 
@@ -70,13 +74,30 @@ async def create_transaction(tx_data: TransactionCreate):
         "signature": tx.signature
     }
 
-@router.post("/mine", response_model=BlockResponse)
+@router.get("/pending-transactions")
+async def get_pending_transactions():
+    """Retourne la liste des transactions en attente."""
+    return [vars(tx) for tx in blockchain_instance.transactions_en_attente]
+
+from src.api.deps import RoleChecker
+
+@router.post("/mine", response_model=BlockResponse, dependencies=[Depends(RoleChecker(['MINEUR']))])
 async def mine_block():
     """Lance le processus de minage des transactions en attente."""
     if not blockchain_instance.transactions_en_attente:
         raise HTTPException(status_code=400, detail="Aucune transaction en attente à miner")
     
     nouveau_bloc = blockchain_instance.miner_transactions_en_attente(adresse_mineur="0xMineurSystème")
+    
+    # Sauvegarde de l'état après minage
+    save_state(
+        blockchain_instance, 
+        foncier_uf, 
+        pending_land_requests, 
+        agriculture_manager.lots, 
+        pending_diploma_requests,
+        microfinance_manager.pending_transfers
+    )
     
     return {
         "index": nouveau_bloc.index,

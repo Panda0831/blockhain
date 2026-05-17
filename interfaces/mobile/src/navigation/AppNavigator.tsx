@@ -8,7 +8,10 @@ import LandScreen from '../screens/LandScreen';
 import AlgoScreen from '../screens/AlgoScreen';
 import AgriScreen from '../screens/AgriScreen';
 import DiplomaScreen from '../screens/DiplomaScreen';
-import { Activity, Map as MapIcon, Brain, Leaf, Award } from '../components/Icons';
+import FinanceScreen from '../screens/FinanceScreen';
+import MinerScreen from '../screens/MinerScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import { Activity, Map as MapIcon, Brain, Leaf, Award, Database, Shield } from '../components/Icons';
 import { palette } from '../theme/palette';
 
 const Stack = createNativeStackNavigator();
@@ -16,7 +19,7 @@ const Tab = createBottomTabNavigator();
 
 function MainTabs({ route }: any) {
   const user = route.params?.user || {};
-  
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -29,7 +32,7 @@ function MainTabs({ route }: any) {
           paddingTop: 5,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: '600',
         },
       }}
@@ -37,17 +40,26 @@ function MainTabs({ route }: any) {
       <Tab.Screen 
         name="Tableau" 
         component={DashboardScreen} 
-        initialParams={{ user }}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Activity color={color} size={size} />
           ),
         }}
       />
+      {user.role === 'MINEUR' && (
+        <Tab.Screen 
+          name="Mineur" 
+          component={MinerScreen} 
+          options={{
+            tabBarIcon: ({ color, size }) => (
+              <Shield color={color} size={size} />
+            ),
+          }}
+        />
+      )}
       <Tab.Screen 
         name="Foncier" 
         component={LandScreen} 
-        initialParams={{ user }}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MapIcon color={color} size={size} />
@@ -55,9 +67,17 @@ function MainTabs({ route }: any) {
         }}
       />
       <Tab.Screen 
+        name="Finance" 
+        component={FinanceScreen} 
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Database color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen 
         name="Agri" 
         component={AgriScreen} 
-        initialParams={{ user }}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Leaf color={color} size={size} />
@@ -67,7 +87,6 @@ function MainTabs({ route }: any) {
       <Tab.Screen 
         name="Algo" 
         component={AlgoScreen} 
-        initialParams={{ user }}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Brain color={color} size={size} />
@@ -77,7 +96,6 @@ function MainTabs({ route }: any) {
       <Tab.Screen 
         name="Diplôme" 
         component={DiplomaScreen} 
-        initialParams={{ user }}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Award color={color} size={size} />
@@ -99,6 +117,7 @@ export default function AppNavigator() {
       >
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Main" component={MainTabs} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

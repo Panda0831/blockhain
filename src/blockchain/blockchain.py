@@ -49,6 +49,14 @@ class Blockchain:
         self.transactions_en_attente.append(transaction)
         return True
 
+    def ajouter_et_miner(self, transaction, adresse_mineur="GOUVERNEMENT_POOL"):
+        """
+        Wrapper pour ajouter une transaction et miner immédiatement un bloc.
+        """
+        if self.ajouter_transaction(transaction):
+            return self.miner_transactions_en_attente(adresse_mineur)
+        return None
+
     def miner_transactions_en_attente(self, adresse_mineur):
         """
         Crée un nouveau bloc contenant les transactions en attente,

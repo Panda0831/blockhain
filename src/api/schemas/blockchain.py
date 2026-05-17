@@ -35,7 +35,7 @@ class BlockResponse(BaseModel):
     timestamp: float
     transactions: List[TransactionResponse]
     previous_hash: str
-    merkle_root: str
+    merkle_root: Optional[str]
     nonce: int
     hash: str
 

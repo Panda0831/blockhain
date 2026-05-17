@@ -5,7 +5,14 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
 from src.blockchain.transaction import Transaction, SecteurActivite
-from src.api.instances import foncier_uf, blockchain_instance, pending_land_requests, agriculture_manager
+from src.api.instances import (
+    foncier_uf, 
+    blockchain_instance, 
+    pending_land_requests, 
+    agriculture_manager,
+    pending_diploma_requests,
+    microfinance_manager
+)
 from src.utils.persistence import save_state
 
 router = APIRouter()
@@ -45,7 +52,14 @@ async def submit_land_request(data: LandRegistrationRequest):
         "status": "PENDING"
     }
     pending_land_requests.append(new_request)
-    save_state(blockchain_instance, foncier_uf, pending_land_requests, agriculture_manager.lots)
+    save_state(
+        blockchain_instance, 
+        foncier_uf, 
+        pending_land_requests, 
+        agriculture_manager.lots, 
+        pending_diploma_requests,
+        microfinance_manager.pending_transfers
+    )
     return {"status": "SUCCESS", "message": "Demande envoyée", "request_id": request_id}
 
 @router.get("/pending")
@@ -53,7 +67,9 @@ async def get_pending_requests():
     """Liste des demandes en attente pour l'administrateur."""
     return [r for r in pending_land_requests if r["status"] == "PENDING"]
 
-@router.post("/approve/{request_id}")
+from src.api.deps import RoleChecker
+
+@router.post("/approve/{request_id}", dependencies=[Depends(RoleChecker(['FONCIER', 'ADMIN']))])
 async def approve_land_request(request_id: int):
     """Approbation d'une demande par l'administrateur."""
     try:
@@ -66,7 +82,7 @@ async def approve_land_request(request_id: int):
         # 1. Mise à jour de la propriété (Union-Find)
         foncier_uf.bind(request["requester_id"], generated_parcel_id)
 
-        # 2. Enregistrement Blockchain
+        # 2. Enregistrement et Minage automatique
         tx = Transaction(
             expediteur="ADMIN_GOUVERNEMENT",
             destinataire=request["requester_id"],
@@ -77,16 +93,21 @@ async def approve_land_request(request_id: int):
         )
         tx.signature = "SIG_OFFICIELLE_ADMIN"
         
-        if not blockchain_instance.ajouter_transaction(tx):
-            raise HTTPException(status_code=500, detail="Erreur lors de l'ajout à la Blockchain")
-
-        # 3. Minage automatique pour la démo
-        blockchain_instance.miner_transactions_en_attente(adresse_mineur="GOUVERNEMENT_POOL")
+        mined_block = blockchain_instance.ajouter_et_miner(tx, adresse_mineur="GOUVERNEMENT_POOL")
+        if not mined_block:
+            raise HTTPException(status_code=500, detail="Erreur lors de l'ajout ou du minage à la Blockchain")
 
         request["status"] = "APPROVED"
         request["generated_parcel_id"] = generated_parcel_id
         
-        save_state(blockchain_instance, foncier_uf, pending_land_requests, agriculture_manager.lots)
+        save_state(
+        blockchain_instance, 
+        foncier_uf, 
+        pending_land_requests, 
+        agriculture_manager.lots, 
+        pending_diploma_requests,
+        microfinance_manager.pending_transfers
+    )
         
         return {
             "status": "SUCCESS", 
@@ -116,7 +137,7 @@ async def transfer_land(data: LandTransfer):
         # 1. Mise à jour Union-Find
         foncier_uf.bind(data.buyer_id, data.parcel_id)
 
-        # 2. Transaction Blockchain
+        # 2. Transaction et Minage automatique
         tx = Transaction(
             expediteur=data.seller_id,
             destinataire=data.buyer_id,
@@ -127,11 +148,17 @@ async def transfer_land(data: LandTransfer):
         )
         tx.signature = data.signature 
         
-        if not blockchain_instance.ajouter_transaction(tx):
-            raise HTTPException(status_code=400, detail="Transaction ou signature invalide")
-
-        blockchain_instance.miner_transactions_en_attente(adresse_mineur="GOUVERNEMENT_POOL")
-        save_state(blockchain_instance, foncier_uf, pending_land_requests, agriculture_manager.lots)
+        mined_block = blockchain_instance.ajouter_et_miner(tx, adresse_mineur="GOUVERNEMENT_POOL")
+        if not mined_block:
+            raise HTTPException(status_code=400, detail="Transaction invalide ou erreur de minage")
+        save_state(
+        blockchain_instance, 
+        foncier_uf, 
+        pending_land_requests, 
+        agriculture_manager.lots, 
+        pending_diploma_requests,
+        microfinance_manager.pending_transfers
+    )
         
         return {
             "status": "SUCCESS",

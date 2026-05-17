@@ -5,19 +5,24 @@ import { palette } from '../theme/palette';
 
 interface TimelineRowProps {
   title: string;
-  value: string;
+  subtitle: string;
+  time: string;
+  isLast?: boolean;
 }
 
-export function TimelineRow({ title, value }: TimelineRowProps) {
+export default function TimelineRow({ title, subtitle, time, isLast }: TimelineRowProps) {
   return (
-    <View style={styles.timelineRow}>
+    <View style={[styles.timelineRow, isLast && { borderBottomWidth: 0 }]}>
       <View style={styles.timelineLeft}>
         <View style={styles.timelineCheck}>
-          <Check color={palette.accent} size={14} strokeWidth={2.4} />
+          <Check color={palette.accent} size={14} />
         </View>
-        <Text style={styles.timelineTitle}>{title}</Text>
+        <View>
+          <Text style={styles.timelineTitle}>{title}</Text>
+          <Text style={styles.timelineSubtitle}>{subtitle}</Text>
+        </View>
       </View>
-      <Text style={styles.timelineValue}>{value}</Text>
+      <Text style={styles.timelineTime}>{time}</Text>
     </View>
   );
 }
@@ -27,33 +32,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(24, 36, 54, 0.08)',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(24, 36, 54, 0.05)',
   },
   timelineLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    paddingRight: 12,
   },
   timelineCheck: {
-    width: 26,
-    height: 26,
-    borderRadius: 999,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: palette.accentTransparent,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
   timelineTitle: {
     fontSize: 14,
     color: palette.ink,
-    fontWeight: '600',
-  },
-  timelineValue: {
-    fontSize: 13,
-    color: palette.accent,
     fontWeight: '700',
+  },
+  timelineSubtitle: {
+    fontSize: 12,
+    color: palette.gray,
+    marginTop: 2,
+  },
+  timelineTime: {
+    fontSize: 11,
+    color: palette.gray,
+    fontWeight: '600',
   },
 });

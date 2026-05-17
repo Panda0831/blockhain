@@ -1,16 +1,109 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
   ChevronRight, 
   ShieldCheck, 
   Zap,
-  Loader2
+  Loader2,
+  Lock,
+  Globe,
+  Database,
+  FileCheck,
+  Trees,
+  Map as MapIcon
 } from 'lucide-react';
 import { authService } from './services/api';
 import './auth.css';
 
-export default function AuthPage() {
+const BlockchainGraph = () => {
+  const [blockHeight, setBlockHeight] = useState(842051);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBlockHeight(prev => prev + 1);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const nodes = [
+    { id: 1, label: 'GENÈSE', icon: <ShieldCheck size={14} />, x: 50, y: 35, delay: '0s', type: 'core' },
+    { id: 2, label: 'TERRAIN', icon: <MapIcon size={14} />, x: 25, y: 45, delay: '-2s', type: 'asset' },
+    { id: 3, label: 'FORÊT', icon: <Trees size={14} />, x: 75, y: 45, delay: '-4s', type: 'asset' },
+    { id: 4, label: 'TITRE', icon: <FileCheck size={14} />, x: 50, y: 55, delay: '-1s', type: 'cert' },
+    { id: 5, label: 'IDENTITÉ', icon: <Lock size={14} />, x: 20, y: 70, delay: '-3s', type: 'user' },
+    { id: 6, label: 'CONTRAT', icon: <Database size={14} />, x: 80, y: 70, delay: '-5s', type: 'cert' },
+    { id: 7, label: 'VALIDATION', icon: <Zap size={14} />, x: 50, y: 80, delay: '-6s', type: 'core' },
+  ];
+
+  const connections = [
+    { from: 1, to: 2 }, { from: 1, to: 3 },
+    { from: 2, to: 4 }, { from: 3, to: 4 },
+    { from: 4, to: 7 }, { from: 5, to: 7 },
+    { from: 6, to: 7 }, { from: 5, to: 4 },
+    { from: 6, to: 4 }
+  ];
+
+  return (
+    <div className="blockchain-graph-container">
+      <div className="live-counter">
+        <span className="counter-label">BLOC ACTUEL</span>
+        <span className="counter-value">#{blockHeight.toLocaleString()}</span>
+      </div>
+      
+      <svg className="graph-lines">
+        {connections.map((conn, i) => {
+          const from = nodes.find(n => n.id === conn.from);
+          const to = nodes.find(n => n.id === conn.to);
+          return (
+            <g key={i}>
+              <line 
+                x1={`${from.x}%`} y1={`${from.y}%`} 
+                x2={`${to.x}%`} y2={`${to.y}%`} 
+                className="base-line"
+              />
+              <circle r="2" className="traveling-dot">
+                <animateMotion 
+                  dur={`${3 + Math.random() * 4}s`} 
+                  repeatCount="indefinite"
+                  path={`M ${from.x * 4},${from.y * 4} L ${to.x * 4},${to.y * 4}`}
+                />
+              </circle>
+            </g>
+          );
+        })}
+      </svg>
+      {nodes.map(node => (
+        <div 
+          key={node.id} 
+          className={`graph-node-wrapper node-type-${node.type}`}
+          style={{ 
+            left: `${node.x}%`, 
+            top: `${node.y}%`,
+            animationDelay: node.delay 
+          }}
+        >
+          <div className="graph-node">
+            <div className="node-icon">{node.icon}</div>
+            <div className="node-info">
+              <span className="node-label">{node.label}</span>
+              <span className="node-hash">0x{Math.random().toString(16).substring(2, 6).toUpperCase()}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+      <div className="hashes-bg">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <div key={i} className="hash-line" style={{ top: `${i * 6}%`, animationDelay: `${i * 0.8}s`, opacity: 0.05 - (i * 0.002) }}>
+            BLOCK_{blockHeight - i} :: SIG: {Math.random().toString(16).substring(2, 14).toUpperCase()}...
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,11 +139,11 @@ export default function AuthPage() {
           email: formData.email,
           password: formData.password
         });
-        alert('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
+        alert('Compte créé avec succès !');
         setIsLogin(true);
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Une erreur est survenue');
+      setError(err.response?.data?.detail || 'Erreur de connexion au réseau');
     } finally {
       setLoading(false);
     }
@@ -58,65 +151,79 @@ export default function AuthPage() {
 
   return (
     <div className="auth-page-wrapper">
-      {/* SECTION BRANDING - Vision & Trust */}
+      <div className="noise-overlay"></div>
+      
+      {/* PANEL GAUCHE - Blockchain Vivante */}
       <div className="auth-side-branding">
-        <div className="blockchain-visual">
-          <div className="cube-container">
-            <div className="chain-connector chain-1-2"></div>
-            <div className="chain-connector chain-2-3"></div>
-            {[1, 2, 3].map((i) => (
-              <div key={i} className={`cube cube-${i}`}>
-                <div className="face front"></div>
-                <div className="face back"></div>
-                <div className="face left"></div>
-                <div className="face right"></div>
-                <div className="face top"></div>
-                <div className="face bottom"></div>
-              </div>
-            ))}
+        <div className="branding-header">
+          <div className="branding-logo">HAZO LOVA</div>
+          <div className="network-stats">
+            <div className="stat-item">
+              <span className="stat-dot"></span>
+              Réseau Actif
+            </div>
+            <div className="stat-item">
+              <Globe size={12} /> MG-BFT v2.4
+            </div>
           </div>
         </div>
-        
-        <div className="branding-content">
-          <div className="branding-logo">HAZO LOVA</div>
-          <h2 className="branding-title">Sécurisez l'avenir de vos actifs.</h2>
-          <p className="branding-quote">
-            "La blockchain n'est pas qu'une technologie, c'est un contrat de confiance pour les générations futures."
-          </p>
+
+        <div className="branding-main-title">
+          <div className="pre-title">MADAGASCAR 2035</div>
+          <h2 className="branding-title">INFRASTRUCTURE DE CONFIANCE.</h2>
         </div>
-        <div className="branding-footer">
-          © 2026 Projet Madagascar 2035 — Infrastructure Certifiée
+
+        <BlockchainGraph />
+        
+        <div className="branding-footer-area">
+          <p className="branding-quote">
+            "Sécuriser l'héritage foncier et forestier de Madagascar par la preuve mathématique."
+          </p>
+          <div className="branding-footer">
+            © 2026 Projet Madagascar 2035 — Service Public Décentralisé
+          </div>
         </div>
       </div>
 
-      {/* SECTION FORMULAIRE - Interaction */}
+      {/* PANEL DROIT - Formulaire Premium */}
       <div className="auth-side-form">
         <Link to="/" className="auth-back-btn">
-          <ArrowLeft size={16} /> Accueil
+          <ArrowLeft size={16} /> Retour
         </Link>
 
         <div className="auth-form-container animate-fade">
           <div className="auth-card-modern">
+            <div className="auth-tabs">
+              <button 
+                className={`tab-btn ${isLogin ? 'active' : ''}`}
+                onClick={() => setIsLogin(true)}
+              >
+                Connexion
+              </button>
+              <button 
+                className={`tab-btn ${!isLogin ? 'active' : ''}`}
+                onClick={() => setIsLogin(false)}
+              >
+                Inscription
+              </button>
+              <div className={`tab-indicator ${isLogin ? 'left' : 'right'}`}></div>
+            </div>
+
             <h1 className="auth-title-modern">
-              {isLogin ? 'Bon retour' : 'Commencer'}
+              {isLogin ? 'Authentification' : 'Rejoindre le réseau'}
             </h1>
-            <p className="auth-subtitle-modern">
-              {isLogin 
-                ? 'Veuillez entrer vos identifiants réseau.' 
-                : 'Créez votre identité numérique sécurisée.'}
-            </p>
+            
+            {error && <div className="error-message-modern">{error}</div>}
 
-            {error && <div style={{ color: '#ef4444', marginBottom: '16px', fontWeight: '600' }}>{error}</div>}
-
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="premium-form">
               {!isLogin && (
                 <div className="form-group-modern">
-                  <label className="label-modern">Nom complet</label>
+                  <label className="label-modern">Identité</label>
                   <input 
                     type="text" 
                     name="username"
                     className="input-modern" 
-                    placeholder="Jean Rakoto" 
+                    placeholder="Nom complet" 
                     value={formData.username}
                     onChange={handleInputChange}
                     required={!isLogin}
@@ -125,7 +232,7 @@ export default function AuthPage() {
               )}
 
               <div className="form-group-modern">
-                <label className="label-modern">Adresse Email</label>
+                <label className="label-modern">Email Réseau</label>
                 <input 
                   type="email" 
                   name="email"
@@ -138,7 +245,7 @@ export default function AuthPage() {
               </div>
 
               <div className="form-group-modern">
-                <label className="label-modern">Mot de passe</label>
+                <label className="label-modern">Clé d'accès</label>
                 <input 
                   type="password" 
                   name="password"
@@ -153,33 +260,33 @@ export default function AuthPage() {
               <button className="btn-modern" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" size={18} /> : (
                   <>
-                    {isLogin ? 'Se connecter' : 'Créer mon compte'}
+                    {isLogin ? 'Se connecter' : 'Valider mon accès'}
                     <ChevronRight size={18} />
                   </>
                 )}
               </button>
             </form>
 
-            <div className="auth-divider">Ou continuer avec</div>
+            <div className="auth-divider">Méthodes Alternatives</div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button className="btn-modern" style={{ background: '#fff', color: '#182436', border: '1px solid #e5e7eb', flex: 1 }}>
+            <div className="social-grid">
+              <button className="btn-modern btn-secondary-modern id-mada">
                 <ShieldCheck size={18} color="#2D7A58" /> ID-Mada
               </button>
-              <button className="btn-modern" style={{ background: '#fff', color: '#182436', border: '1px solid #e5e7eb', flex: 1 }}>
-                <Zap size={18} color="#d4a373" /> Express
+              <button className="btn-modern btn-secondary-modern express">
+                <Zap size={18} color="#D4A373" /> Express
               </button>
             </div>
 
-            <p className="toggle-modern">
-              {isLogin ? "Nouveau sur le réseau ?" : "Déjà un compte ?"} 
-              <span className="toggle-link-modern" onClick={() => setIsLogin(!isLogin)}>
-                {isLogin ? "Créer un accès" : "Se connecter"}
-              </span>
-            </p>
+            <div className="security-badge">
+              <Lock size={12} />
+              Chiffrement de bout en bout — Protocole HZ-AES
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+export default AuthPage;

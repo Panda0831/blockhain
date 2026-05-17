@@ -82,7 +82,7 @@ class Transaction:
         if self.expediteur in ["SYSTEM", "ADMIN_GOUVERNEMENT", "GOUVERNEMENT_FONCIER"]:
             return True
         
-        if self.signature in ["SIG_MOBILE_DEMO", "SIG_PROD_DEMO", "SIG_COLLECTEUR_DEMO", "SIG_ADMIN_DIPLOME"]:
+        if self.signature in ["SIG_MOBILE_DEMO", "SIG_PROD_DEMO", "SIG_COLLECTEUR_DEMO", "SIG_ADMIN_DIPLOME", "SIG_FINANCE_DEMO"]:
             return True
 
         # 2. Vérification de la signature

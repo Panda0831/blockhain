@@ -1,0 +1,301 @@
+.land-container-full {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Land Stats Summary */
+.land-stats-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.l-stat-card {
+    background: var(--blanc);
+    padding: 24px;
+    border-radius: var(--radius-md);
+    border: var(--border-main);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.l-stat-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--off-white);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--emeraude);
+}
+
+.l-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.l-stat-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.l-stat-value {
+    font-family: "Syne", sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+/* Main Grid Layout */
+.land-main-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 40px;
+}
+
+.parcels-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.search-filter-bar {
+    display: flex;
+    gap: 16px;
+    background: var(--blanc);
+    padding: 16px;
+    border-radius: 16px;
+    border: var(--border-main);
+}
+
+.search-input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--off-white);
+    padding: 0 16px;
+    border-radius: 10px;
+}
+
+.search-input-wrapper input {
+    background: transparent;
+    border: none;
+    padding: 12px 0;
+    width: 100%;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.search-input-wrapper input:focus { outline: none; }
+
+/* Timeline Activity */
+.land-history-card {
+    background: var(--blanc);
+    padding: 30px;
+    border-radius: var(--radius-lg);
+    border: var(--border-main);
+    margin-top: 30px;
+}
+
+.land-activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.land-activity-item {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.land-activity-item:last-child { border-bottom: none; }
+
+.act-icon-box {
+    width: 32px;
+    height: 32px;
+    background: var(--off-white);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--navy);
+}
+
+.act-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.act-title {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.act-meta {
+    font-size: 11px;
+    opacity: 0.5;
+}
+
+@media (max-width: 1200px) {
+    .land-main-layout { grid-template-columns: 1fr; }
+    .land-stats-summary { grid-template-columns: repeat(2, 1fr); }
+}
+
+.parcel-card {
+    background: var(--blanc);
+    padding: 24px;
+    border-radius: var(--radius-md);
+    border: var(--border-main);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.parcel-card:hover {
+    border-color: var(--emeraude);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.parcel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.parcel-id {
+    font-family: "Syne", sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--navy);
+}
+
+.parcel-status {
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: var(--emeraude);
+    background: rgba(45, 122, 88, 0.08);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.parcel-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.parcel-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.parcel-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy);
+}
+
+.parcel-actions {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: var(--border-main);
+    display: flex;
+    gap: 10px;
+}
+
+.parcel-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.btn-transfer {
+    background: var(--navy);
+    color: var(--blanc);
+    border: none;
+}
+
+.btn-details {
+    background: var(--off-white);
+    color: var(--navy);
+    border: var(--border-main);
+}
+
+.btn-transfer:hover { background: var(--emeraude); }
+
+/* Mutation Area */
+.mutation-card {
+    background: var(--blanc);
+    padding: 30px;
+    border-radius: var(--radius-lg);
+    border: var(--border-main);
+}
+
+.mutation-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--navy);
+}
+
+.form-input {
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: var(--border-main);
+    background: var(--off-white);
+    font-size: 14px;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--emeraude);
+}
+
+.btn-submit-mutation {
+    background: var(--navy);
+    color: var(--blanc);
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    font-family: "Syne", sans-serif;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-submit-mutation:hover {
+    background: var(--emeraude);
+}
