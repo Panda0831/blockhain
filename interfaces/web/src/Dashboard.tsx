@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -13,13 +13,41 @@ import {
   ChevronRight,
   TrendingUp,
   ShieldCheck,
-  Globe
+  Shield,
+  Globe,
+  Brain
 } from 'lucide-react';
-import { authService } from './services/api';
+import { authService, blockchainService, landService, agriService } from './services/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{"username": "Utilisateur Réseau", "public_key": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"}');
+  const userStr = localStorage.getItem('user');
+  if (!userStr) {
+    // Ne devrait pas arriver avec ProtectedRoute mais par sécurité
+    return null;
+  }
+  const user = JSON.parse(userStr);
+  const [brainInfo, setBrainInfo] = useState<any>(null);
+  const [realStats, setRealStats] = useState({ blocks: 0, assets: 0 });
+
+  useEffect(() => {
+    blockchainService.getBrainInfo().then(setBrainInfo).catch(console.error);
+    
+    const fetchRealData = async () => {
+        try {
+            const [blocks, parcels, lots] = await Promise.all([
+                blockchainService.getBlocks(),
+                landService.getParcelsByOwner(user.public_key),
+                agriService.getAllLots()
+            ]);
+            setRealStats({ 
+                blocks: blocks.length, 
+                assets: parcels.length + lots.length 
+            });
+        } catch (e) { console.error(e); }
+    };
+    fetchRealData();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -27,8 +55,8 @@ export default function Dashboard() {
   };
 
   const stats = [
-    { label: 'Blocs Validés', value: '1,284', trend: '+12.5%', icon: <ShieldCheck size={20} /> },
-    { label: 'Actifs Détenus', value: '43', trend: '+3.2%', icon: <MapIcon size={20} /> },
+    { label: 'Blocs Validés', value: realStats.blocks.toString(), trend: 'Live', icon: <ShieldCheck size={20} /> },
+    { label: 'Actifs Détenus', value: realStats.assets.toString(), trend: 'Live', icon: <MapIcon size={20} /> },
     { label: 'Réputation', value: '98/100', trend: 'Stable', icon: <TrendingUp size={20} /> },
     { label: 'Nodes Actifs', value: '1,402', trend: '+24', icon: <Globe size={20} /> }
   ];
@@ -73,9 +101,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-wrapper">
-      <div className="noise-overlay"></div>
-      <div className="lens-flare lp-1"></div>
-      <div className="lens-flare lp-2"></div>
       
       {/* SIDEBAR */}
       <aside className="sidebar">
@@ -97,6 +122,11 @@ export default function Dashboard() {
           <Link to="/education" className="nav-item">
             <GraduationCap className="nav-icon" /> Éducation
           </Link>
+          {user.role === 'MINEUR' && (
+            <Link to="/miner" className="nav-item">
+              <Shield className="nav-icon" /> Mineur
+            </Link>
+          )}
           <Link to="/finance" className="nav-item">
             <Wallet className="nav-icon" /> Microfinance
           </Link>
@@ -139,7 +169,6 @@ export default function Dashboard() {
           <div className="stats-grid">
             {stats.map((stat, i) => (
               <div key={i} className="stat-card">
-                <div className="crystal-shine"></div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div className="stat-label">{stat.label}</div>
                   <div style={{ color: 'var(--emeraude)', opacity: 0.6 }}>{stat.icon}</div>
@@ -157,7 +186,6 @@ export default function Dashboard() {
               <div className="modules-grid">
                 {modules.map((m, i) => (
                   <div key={i} className="module-card" onClick={() => navigate(m.path)}>
-                    <div className="crystal-shine"></div>
                     <div className="module-icon-box">{m.icon}</div>
                     <div className="module-tag" style={{ fontSize: '9px', fontWeight: 900, color: 'var(--or)', letterSpacing: '1px', marginBottom: '8px' }}>{m.tag}</div>
                     <h3>{m.title}</h3>
@@ -170,23 +198,19 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* RECENT ACTIVITY */}
+            {/* AI CONSENSUS MONITOR */}
             <div className="activity-area">
-              <h2 className="section-title">Flux Réseau</h2>
-              <div className="activity-list">
-                {[
-                  { type: 'BLOCK', desc: 'Nouveau bloc scellé #842054', time: 'Il y a 2m' },
-                  { type: 'LAND', desc: 'Titre HZL-LND-92 mis à jour', time: 'Il y a 14m' },
-                  { type: 'AGRI', desc: 'Récolte certifiée : Vanille A1', time: 'Il y a 32m' },
-                  { type: 'USER', desc: 'Nouvelle identité validée', time: 'Il y a 1h' }
-                ].map((act, i) => (
-                  <div key={i} className="activity-item">
-                    <div className="act-type">{act.type}</div>
-                    <div className="act-desc">{act.desc}</div>
-                    <div className="act-time">{act.time}</div>
-                  </div>
-                ))}
-                <button className="view-all-btn">VOIR LE REGISTRE COMPLET</button>
+              <h2 className="section-title">Consensus IA</h2>
+              <div id="ai-monitor" className="activity-list">
+                 {brainInfo ? Object.entries(brainInfo).map(([state, info]: any) => (
+                    <div key={state} className="activity-item" style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                        <div>
+                            <div className="act-type">{state}</div>
+                            <div className="act-desc">{info.best_leader}</div>
+                        </div>
+                        <div className="act-time" style={{fontWeight: 800}}>{info.score.toFixed(1)}</div>
+                    </div>
+                 )) : <p style={{fontSize: '13px'}}>Chargement de l'intelligence réseau...</p>}
               </div>
             </div>
           </div>

@@ -21,19 +21,34 @@ import {
   MapPin,
   Clock,
   ArrowRight,
-  Leaf
+  Leaf,
+  DollarSign
 } from 'lucide-react';
-import { agriService, algoService } from './services/api';
+import { agriService, algoService, authService, notificationService } from './services/api';
+import { BobModal } from './components/BobModal';
 import './dashboard.css';
 
 export default function AgriModule() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{"username": "Utilisateur Réseau", "public_key": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"}');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
   
   const [activeTab, setActiveTab] = useState<'harvest' | 'tracking' | 'transport'>('harvest');
   const [loading, setLoading] = useState(false);
   const [lots, setLots] = useState<any[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  // Sale Modal State
+  const [saleModalVisible, setSaleModalVisible] = useState(false);
+  const [selectedLot, setSelectedLot] = useState<any>(null);
+  const [buyerId, setBuyerId] = useState('');
+  const [buyerName, setBuyerName] = useState('');
+  const [price, setPrice] = useState('');
+  
+  // User Selection
+  const [users, setUsers] = useState<any[]>([]);
+  const [userSearch, setUserSearch] = useState('');
+  const [showUserList, setShowUserList] = useState(false);
 
   // Harvest Form State
   const [harvestData, setHarvestData] = useState({
@@ -48,15 +63,29 @@ export default function AgriModule() {
   const [destination, setDestination] = useState('');
   const [optimizedPath, setOptimizedPath] = useState<string[] | null>(null);
 
+
+
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [lotsData, districtsData] = await Promise.all([
+      const [lotsData, districtsData, usersData, notifs] = await Promise.all([
         agriService.getAllLots(),
-        algoService.getDistricts()
+        algoService.getDistricts(),
+        authService.getUsers(),
+        notificationService.getNotifications(user.public_key)
       ]);
-      setLots(lotsData.reverse());
+
+      const normalize = (k: string) => k.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const myKey = normalize(user.public_key);
+
+      // Filtrage : uniquement mes produits
+      const myLots = lotsData.filter((l: any) => normalize(l.owner_id) === myKey);
+      
+      setLots(myLots.reverse());
       setDistricts(districtsData);
+      setUsers(usersData);
+      setNotifications(notifs);
     } catch (err) {
       console.error("Erreur chargement agriculture :", err);
     } finally {
@@ -95,6 +124,61 @@ export default function AgriModule() {
     }
   };
 
+  const handleSell = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!buyerId || !price || !selectedLot) return;
+    setLoading(true);
+    try {
+      await agriService.sellLot({
+        lot_id: selectedLot.id,
+        buyer_id: buyerId,
+        price: parseFloat(price),
+        seller_id: user.public_key
+      });
+      setSaleModalVisible(false);
+      setBuyerId('');
+      setBuyerName('');
+      setPrice('');
+      fetchData();
+      alert("Vente enregistrée en Blockchain !");
+    } catch (error) {
+      alert("La vente a échoué. Seul le propriétaire peut vendre ce lot.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAcceptSale = async (saleOfferId: string) => {
+    try {
+      setLoading(true);
+      await agriService.acceptSale(saleOfferId);
+      alert("Vente acceptée avec succès !");
+      fetchData();
+    } catch (err) {
+      alert("Erreur lors de l'acceptation de la vente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectBuyer = (selectedUser: any) => {
+
+    setBuyerId(selectedUser.public_key);
+    setBuyerName(selectedUser.username);
+    setShowUserList(false);
+    setUserSearch('');
+  };
+
+  const filteredUsers = users.filter(u => 
+    u.username.toLowerCase().includes(userSearch.toLowerCase()) ||
+    u.public_key.toLowerCase().includes(userSearch.toLowerCase())
+  );
+
+  const openSaleModal = (lot: any) => {
+    setSelectedLot(lot);
+    setSaleModalVisible(true);
+  };
+
   const handleOptimizeTransport = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedLotId || !destination) {
@@ -109,9 +193,8 @@ export default function AgriModule() {
         destination: destination
       });
       
-      const lastTrace = res.lot.traceability[res.lot.traceability.length - 1];
-      if (lastTrace && lastTrace.chemin) {
-        setOptimizedPath(lastTrace.chemin);
+      if (res.path) {
+        setOptimizedPath(res.path);
       }
       
       alert("Trajet optimisé via A* et enregistré !");
@@ -212,6 +295,13 @@ export default function AgriModule() {
             >
               Logistique (A*)
             </button>
+            <button 
+              className={`tab-btn ${activeTab === 'notifications' ? 'active' : ''}`}
+              onClick={() => setActiveTab('notifications')}
+              style={{ padding: '15px 0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '14px', color: activeTab === 'notifications' ? 'var(--navy)' : '#94a3b8', borderBottom: activeTab === 'notifications' ? '3px solid var(--navy)' : '3px solid transparent' }}
+            >
+              Notifications ({notifications.length})
+            </button>
           </div>
 
           <div className="land-container-full">
@@ -234,28 +324,14 @@ export default function AgriModule() {
                     <h2 className="section-title">Nouvelle Récolte</h2>
                     <form className="mutation-form" onSubmit={handleHarvest}>
                       <div className="form-field">
-                        <label className="form-label">Produit</label>
-                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                          {['Vanille', 'Café', 'Girofle', 'Poivre', 'Cacao'].map(p => (
-                            <button 
-                              key={p} 
-                              type="button"
-                              onClick={() => setHarvestData({...harvestData, productType: p})}
-                              style={{ 
-                                padding: '10px 20px', 
-                                borderRadius: '20px', 
-                                border: harvestData.productType === p ? '2px solid var(--emeraude)' : '1px solid #e2e8f0',
-                                background: harvestData.productType === p ? 'rgba(45, 122, 88, 0.1)' : 'var(--off-white)',
-                                color: harvestData.productType === p ? 'var(--emeraude)' : '#64748b',
-                                fontWeight: 700,
-                                fontSize: '12px',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              {p}
-                            </button>
-                          ))}
-                        </div>
+                        <label className="form-label">Nom du Produit</label>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="Ex: Poivre Noir, Riz Makalioka..." 
+                          value={harvestData.productType}
+                          onChange={(e) => setHarvestData({...harvestData, productType: e.target.value})}
+                        />
                       </div>
                       <div className="form-field">
                         <label className="form-label">District d'Origine</label>
@@ -265,7 +341,7 @@ export default function AgriModule() {
                           onChange={(e) => setHarvestData({...harvestData, district: e.target.value})}
                         >
                           <option value="">Sélectionnez un district</option>
-                          {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                          {districts.map(d => <option key={d.id} value={d.nom}>{d.nom}</option>)}
                         </select>
                       </div>
                       <div className="form-field">
@@ -323,6 +399,11 @@ export default function AgriModule() {
                             <button className="parcel-btn btn-details" onClick={() => { setSelectedLotId(lot.id); setActiveTab('transport'); }}>
                               <Navigation size={14} /> Logistique
                             </button>
+                            {lot.status !== 'VENDU' && (
+                              <button className="parcel-btn btn-transfer" onClick={() => openSaleModal(lot)}>
+                                <Wallet size={14} /> Vendre
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -353,7 +434,7 @@ export default function AgriModule() {
                           onChange={(e) => setDestination(e.target.value)}
                         >
                           <option value="">Choisir une destination...</option>
-                          {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                          {districts.map(d => <option key={d.id} value={d.nom}>{d.nom}</option>)}
                         </select>
                       </div>
                       <button type="submit" className="btn-submit-mutation" disabled={loading}>
@@ -375,6 +456,22 @@ export default function AgriModule() {
                           ))}
                         </div>
                       </div>
+                    )}
+                  </div>
+                )}
+                {activeTab === 'notifications' && (
+                  <div style={{ background: 'var(--blanc)', padding: '40px', borderRadius: '24px', border: 'var(--border-main)' }}>
+                    <h2 className="section-title">Mes Offres d'Achat</h2>
+                    {notifications.length === 0 ? <p>Aucune offre en attente.</p> : (
+                        <div className="parcels-grid">
+                            {notifications.map((n, i) => (
+                                <div key={i} className="parcel-card">
+                                    <div className="parcel-header"><span className="parcel-id">{n.sale_offer_id}</span></div>
+                                    <p>{n.message}</p>
+                                    <button className="parcel-btn btn-transfer" onClick={() => handleAcceptSale(n.sale_offer_id)}>Accepter l'offre</button>
+                                </div>
+                            ))}
+                        </div>
                     )}
                   </div>
                 )}
@@ -408,6 +505,92 @@ export default function AgriModule() {
           </div>
         </div>
       </main>
+
+      <BobModal 
+        visible={saleModalVisible} 
+        onClose={() => setSaleModalVisible(false)}
+        title="Finaliser la Vente"
+      >
+        <form onSubmit={handleSell}>
+          <div className="bob-summary">{selectedLot?.product_type} - {selectedLot?.weight}kg</div>
+          
+          <div className="bob-form-group">
+            <label className="bob-label">Rechercher l'Acheteur</label>
+            <div className="bob-input-wrapper">
+              <Search size={18} color="var(--gray)" />
+              <input 
+                className="bob-input" 
+                placeholder="Nom ou Clé publique..." 
+                value={buyerName || userSearch}
+                onChange={(e) => {
+                  if (buyerName) { setBuyerName(''); setBuyerId(''); }
+                  setUserSearch(e.target.value);
+                  setShowUserList(true);
+                }}
+                onFocus={() => setShowUserList(true)}
+                required
+              />
+            </div>
+            
+            {showUserList && userSearch.length > 0 && (
+              <div className="bob-user-dropdown" style={{ 
+                background: 'var(--white)', 
+                border: '1px solid var(--border)', 
+                borderRadius: '12px', 
+                marginTop: '10px', 
+                maxHeight: '200px', 
+                overflowY: 'auto',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }}>
+                {filteredUsers.slice(0, 5).map(u => (
+                  <div 
+                    key={u.public_key} 
+                    onClick={() => selectBuyer(u)}
+                    style={{ 
+                      padding: '12px 16px', 
+                      cursor: 'pointer', 
+                      borderBottom: '1px solid var(--lightGray)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--lightGray)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div style={{ width: '32px', height: '32px', borderRadius: '16px', background: 'var(--accent)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px' }}>
+                      {u.username[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 700 }}>{u.username}</div>
+                      <div style={{ fontSize: '10px', color: 'var(--gray)' }}>{u.public_key.substring(0, 20)}...</div>
+                    </div>
+                  </div>
+                ))}
+                {filteredUsers.length === 0 && <div style={{ padding: '16px', textAlign: 'center', color: 'var(--gray)', fontSize: '12px' }}>Aucun utilisateur trouvé</div>}
+              </div>
+            )}
+          </div>
+
+          <div className="bob-form-group">
+            <label className="bob-label">Prix de vente (MGA)</label>
+            <div className="bob-input-wrapper">
+              <DollarSign size={18} color="var(--gray)" />
+              <input 
+                className="bob-input" 
+                type="number"
+                placeholder="Ex: 500000" 
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="bob-submit-btn" disabled={loading || !buyerId}>
+            {loading ? 'Traitement...' : 'Confirmer la Vente'}
+          </button>
+        </form>
+      </BobModal>
     </div>
   );
 }

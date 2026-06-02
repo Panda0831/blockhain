@@ -42,9 +42,12 @@ export default function AlgoScreen() {
     setCalculating(true);
     setPathResult(null);
     try {
+      console.log(`[DEBUG] Calling findPath with startId=${startId}, endId=${endId}`);
       const data = await algoService.findPath(startId, endId);
+      console.log("[DEBUG] Received path data:", data);
       setPathResult(data);
     } catch (error) {
+      console.error("[DEBUG] Error finding path:", error);
       alert('Chemin non trouvé');
     } finally {
       setCalculating(false);

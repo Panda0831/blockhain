@@ -23,15 +23,18 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-import { microfinanceService, authService } from './services/api';
+import { microfinanceService, authService, blockchainService } from './services/api';
+import { SimpleChart } from './components/SimpleChart';
 import './dashboard.css';
 
 export default function FinanceModule() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{"username": "Utilisateur Réseau", "public_key": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"}');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
   
   const [activeTab, setActiveTab] = useState<'send' | 'wallet'>('send');
   const [loading, setLoading] = useState(false);
+  const [balance, setBalance] = useState(0);
+  const [history, setHistory] = useState<number[]>([]);
   
   // Send Form State
   const [sendData, setSendData] = useState({
@@ -49,9 +52,41 @@ export default function FinanceModule() {
   // Wallet State
   const [pendingTransfers, setPendingTransfers] = useState<any[]>([]);
 
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  
   const fetchData = async () => {
     setLoading(true);
     try {
+      // Récupération du solde, historique de solde, et liste des blocs
+      const [balRes, histRes, blocks] = await Promise.all([
+        blockchainService.getBalance(user.public_key),
+        blockchainService.getBalanceHistory(user.public_key),
+        blockchainService.getBlocks()
+      ]);
+      
+      setBalance(balRes.balance);
+      setHistory(histRes.history);
+
+      // Traitement de l'historique réel
+      const normalize = (k: string) => k.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const myKey = normalize(user.public_key);
+      
+      const realHistory: any[] = [];
+      // On parcourt les blocs en partant du plus récent
+      [...blocks].reverse().forEach(block => {
+          block.transactions.forEach((tx: any) => {
+              if (normalize(tx.expediteur) === myKey || normalize(tx.destinataire) === myKey) {
+                  realHistory.push({
+                      type: normalize(tx.expediteur) === myKey ? 'SEND' : 'RECV',
+                      desc: tx.description,
+                      amount: (normalize(tx.expediteur) === myKey ? '-' : '+') + tx.montant + ' MGA',
+                      time: new Date(tx.horodatage * 1000).toLocaleDateString()
+                  });
+              }
+          });
+      });
+      setHistoryData(realHistory.slice(0, 5));
+
       if (activeTab === 'wallet') {
         const data = await microfinanceService.getPendingTransfers(user.public_key);
         setPendingTransfers(data.reverse());
@@ -60,7 +95,7 @@ export default function FinanceModule() {
       const usersData = await authService.getUsers();
       setAllUsers(usersData.filter((u: any) => u.public_key !== user.public_key));
     } catch (err) {
-      console.error("Erreur chargement microfinance :", err);
+      console.error("Erreur chargement finance :", err);
     } finally {
       setLoading(false);
     }
@@ -125,10 +160,10 @@ export default function FinanceModule() {
   };
 
   const financeStats = [
-    { label: 'Solde HZ-MGA', value: '12,500.00', icon: <Wallet size={18} /> },
-    { label: 'Transactions', value: '42', icon: <TrendingUp size={18} /> },
+    { label: 'Solde HZ-MGA', value: balance.toLocaleString() + '.00', icon: <Wallet size={18} /> },
+    { label: 'Transactions', value: 'Décentralisé', icon: <TrendingUp size={18} /> },
     { label: 'Réseau', value: 'BFT-Secure', icon: <ShieldCheck size={18} /> },
-    { label: 'Nodes', value: '8 Banques', icon: <Globe size={18} /> }
+    { label: 'Nodes', value: 'Hazo Lova', icon: <Globe size={18} /> }
   ];
 
   return (
@@ -219,77 +254,84 @@ export default function FinanceModule() {
             <div className="land-main-layout">
               <div className="parcels-section">
                 {activeTab === 'send' && (
-                  <div className="registration-form-area" style={{ background: 'var(--blanc)', padding: '40px', borderRadius: '24px', border: 'var(--border-main)' }}>
-                    <h2 className="section-title">Nouveau Transfert</h2>
-                    <form className="mutation-form" onSubmit={handleSend}>
-                      <div className="form-field" style={{ position: 'relative' }}>
-                        <label className="form-label">Destinataire (Citoyen)</label>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <input 
-                            type="text" 
-                            className="form-input" 
-                            style={{ flex: 1 }}
-                            placeholder="Chercher par nom..." 
-                            value={userSearchQuery}
-                            onChange={(e) => {
-                              setUserSearchQuery(e.target.value);
-                              setShowUserSelector(true);
-                            }}
-                            onFocus={() => setShowUserSelector(true)}
-                          />
-                          {sendData.receiverId && (
-                            <div style={{ background: 'var(--emeraude)', color: 'white', padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center' }}>
-                              <Check size={16} />
+                  <>
+                    <h2 className="section-title">Analyse du Portefeuille</h2>
+                    <div style={{ marginBottom: '30px' }}>
+                       <SimpleChart data={history} height={250} />
+                    </div>
+
+                    <div className="registration-form-area" style={{ background: 'var(--blanc)', padding: '40px', borderRadius: '24px', border: 'var(--border-main)' }}>
+                      <h2 className="section-title">Nouveau Transfert</h2>
+                      <form className="mutation-form" onSubmit={handleSend}>
+                        <div className="form-field" style={{ position: 'relative' }}>
+                          <label className="form-label">Destinataire (Citoyen)</label>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <input 
+                              type="text" 
+                              className="form-input" 
+                              style={{ flex: 1 }}
+                              placeholder="Chercher par nom..." 
+                              value={userSearchQuery}
+                              onChange={(e) => {
+                                setUserSearchQuery(e.target.value);
+                                setShowUserSelector(true);
+                              }}
+                              onFocus={() => setShowUserSelector(true)}
+                            />
+                            {sendData.receiverId && (
+                              <div style={{ background: 'var(--emeraude)', color: 'white', padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center' }}>
+                                <Check size={16} />
+                              </div>
+                            )}
+                          </div>
+                          
+                          {showUserSelector && userSearchQuery && (
+                            <div className="user-dropdown" style={{ 
+                              position: 'absolute', top: '100%', left: 0, right: 0, 
+                              background: 'white', border: 'var(--border-main)', borderRadius: '12px', 
+                              marginTop: '5px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: 'var(--shadow-md)'
+                            }}>
+                              {filteredUsers.map((u, i) => (
+                                <div key={i} className="user-option" onClick={() => selectReceiver(u)} style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ fontWeight: 700, fontSize: '13px' }}>{u.username}</span>
+                                    <span style={{ fontSize: '10px', opacity: 0.5, fontFamily: 'monospace' }}>{u.public_key.substring(0, 20)}...</span>
+                                  </div>
+                                  <span style={{ fontSize: '9px', fontWeight: 900, color: 'var(--or)', textTransform: 'uppercase' }}>{u.role}</span>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>
-                        
-                        {showUserSelector && userSearchQuery && (
-                          <div className="user-dropdown" style={{ 
-                            position: 'absolute', top: '100%', left: 0, right: 0, 
-                            background: 'white', border: 'var(--border-main)', borderRadius: '12px', 
-                            marginTop: '5px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: 'var(--shadow-md)'
-                          }}>
-                            {filteredUsers.map((u, i) => (
-                              <div key={i} className="user-option" onClick={() => selectReceiver(u)} style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                  <span style={{ fontWeight: 700, fontSize: '13px' }}>{u.username}</span>
-                                  <span style={{ fontSize: '10px', opacity: 0.5, fontFamily: 'monospace' }}>{u.public_key.substring(0, 20)}...</span>
-                                </div>
-                                <span style={{ fontSize: '9px', fontWeight: 900, color: 'var(--or)', textTransform: 'uppercase' }}>{u.role}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
 
-                      <div className="form-field">
-                        <label className="form-label">Montant (Ariary)</label>
-                        <input 
-                          type="number" 
-                          className="form-input" 
-                          placeholder="0.00" 
-                          value={sendData.amount}
-                          onChange={(e) => setSendData({...sendData, amount: e.target.value})}
-                        />
-                      </div>
+                        <div className="form-field">
+                          <label className="form-label">Montant (Ariary)</label>
+                          <input 
+                            type="number" 
+                            className="form-input" 
+                            placeholder="0.00" 
+                            value={sendData.amount}
+                            onChange={(e) => setSendData({...sendData, amount: e.target.value})}
+                          />
+                        </div>
 
-                      <div className="form-field">
-                        <label className="form-label">Motif du transfert</label>
-                        <input 
-                          type="text" 
-                          className="form-input" 
-                          placeholder="Achat de vanille, prêt, etc." 
-                          value={sendData.description}
-                          onChange={(e) => setSendData({...sendData, description: e.target.value})}
-                        />
-                      </div>
+                        <div className="form-field">
+                          <label className="form-label">Motif du transfert</label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder="Achat de vanille, prêt, etc." 
+                            value={sendData.description}
+                            onChange={(e) => setSendData({...sendData, description: e.target.value})}
+                          />
+                        </div>
 
-                      <button type="submit" className="btn-submit-mutation" disabled={loading}>
-                        {loading ? 'Initialisation...' : 'INITIALISER LE TRANSFERT SECURE'}
-                      </button>
-                    </form>
-                  </div>
+                        <button type="submit" className="btn-submit-mutation" disabled={loading}>
+                          {loading ? 'Initialisation...' : 'INITIALISER LE TRANSFERT SECURE'}
+                        </button>
+                      </form>
+                    </div>
+                  </>
                 )}
 
                 {activeTab === 'wallet' && (
@@ -330,11 +372,7 @@ export default function FinanceModule() {
                 <h2 className="section-title">Historique Flux</h2>
                 <div className="land-history-card" style={{ marginTop: 0 }}>
                   <div className="land-activity-list">
-                    {[
-                      { type: 'SEND', desc: 'Transfert vers 0x82...a1', amount: '-5,000 Ar', time: 'Il y a 1h' },
-                      { type: 'RECV', desc: 'Réception de COOP_SAVA', amount: '+12,000 Ar', time: 'Il y a 3h' },
-                      { type: 'FEES', desc: 'Frais de minage (PoW)', amount: '-10 Ar', time: 'Hier' }
-                    ].map((act, i) => (
+                    {historyData.map((act, i) => (
                       <div key={i} className="land-activity-item">
                         <div className="act-icon-box">
                           {act.type === 'RECV' ? <ArrowDownLeft size={14} color="var(--emeraude)" /> : <ArrowUpRight size={14} color="#ef4444" />}

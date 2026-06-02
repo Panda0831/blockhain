@@ -11,6 +11,7 @@ from src.api.routes import (
     education_routes,
     microfinance_routes,
     notification_routes,
+    p2p_routes,
 )
 
 app = FastAPI(
@@ -56,6 +57,9 @@ app.include_router(
 )
 app.include_router(
     algorithm_routes.router, prefix="/api/algo", tags=["Intelligence & Réseau"]
+)
+app.include_router(
+    p2p_routes.router, prefix="/api/p2p", tags=["Synchronisation P2P"]
 )
 
 

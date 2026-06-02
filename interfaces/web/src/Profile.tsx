@@ -23,7 +23,11 @@ import './profile.css';
 
 export default function Profile() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{"username": "Utilisateur Réseau", "email": "contact@hazolova.mg", "public_key": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"}');
+  const userStr = localStorage.getItem('user');
+  if (!userStr) {
+    return null;
+  }
+  const user = JSON.parse(userStr);
 
   const handleLogout = () => {
     localStorage.removeItem('user');

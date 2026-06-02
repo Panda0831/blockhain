@@ -7,6 +7,8 @@ class AStar:
         :param graphe: Instance de DistrictsGraph.
         """
         self.graphe = graphe
+        # chercher
+        # cherhcher
 
     def chercher(self, id_depart, id_arrivee):
         """
@@ -49,10 +51,11 @@ class AStar:
                     or nouveau_cout < cout_actuel[voisin_id]
                 ):
                     cout_actuel[voisin_id] = nouveau_cout
-
-                    # f(n) = g(n) + h(n)
-                    # g(n) = nouveau_cout
-                    # h(n) = distance à vol d'oiseau jusqu'à l'arrivée
+                    # f(n) c'est la priorité de la frontière
+                    # f(n) = g(n) + h(n) calculée comme la somme du coût actuel et de l'heuristique
+                    # g(n) = nouveau_cout : coût actuel pour atteindre le voisin
+                    # h(n) = distance à vol d'oiseau jusqu'à l'arrivée : heuristique
+                    # h(n) = l'heuristique sert à estimer le coût restant pour atteindre l'arrivée
                     d_voisin = self.graphe.districts[voisin_id]
                     d_arrivee = self.graphe.districts[id_arrivee]
 

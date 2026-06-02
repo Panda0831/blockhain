@@ -56,8 +56,40 @@ class AgricultureManager:
         tx.signature = "SIG_PROD_DEMO"
         
         if self.blockchain.ajouter_transaction(tx):
-            self.lots[lot_id] = lot
-            print(f"DEBUG: Lot stored with ID: {lot_id}. Current lots: {list(self.lots.keys())}")
+            # self.lots[lot_id] = lot  <-- SUPPRIMÉ : L'état sera mis à jour via le minage
+            print(f"DEBUG: Transaction for lot {lot_id} added to mempool.")
+            return lot
+        return None
+
+    def sell_lot(self, lot_id: str, buyer_id: str, price: float, seller_id: str):
+        """
+        Enregistre la vente d'un lot sur la blockchain (transfert d'ownership).
+        Vérifie que le vendeur est bien le propriétaire actuel.
+        """
+        lot = self.lots.get(lot_id)
+        if not lot:
+            return None
+        
+        # Vérification de propriété
+        def normalize(k): return re.sub(r'[^a-zA-Z0-9]', '', str(k)).lower()
+        if normalize(lot.owner_id) != normalize(seller_id):
+            print(f" [!] FRAUDE DÉTECTÉE : {seller_id} tente de vendre un lot appartenant à {lot.owner_id}")
+            return None
+        
+        # Transaction Blockchain pour le transfert de propriété
+        tx = Transaction(
+            expediteur=lot.owner_id,
+            destinataire=buyer_id,
+            donnees={"lot_id": lot_id, "action": "SALE", "price": price},
+            secteur=SecteurActivite.PRODUITS_AGRICOLES,
+            description=f"Vente du lot {lot_id} ({lot.product_type})",
+            montant=0
+        )
+        tx.signature = "SIG_VENDEUR_DEMO"
+        
+        if self.blockchain.ajouter_transaction(tx):
+            # Mise à jour différée via minage
+            print(f"DEBUG: Sale transaction for lot {lot_id} added to mempool.")
             return lot
         return None
 
@@ -68,27 +100,24 @@ class AgricultureManager:
         lot = next((v for k, v in self.lots.items() if k == lot_id), None)
         
         if lot is None:
-            return None
-        start_node = next((d for d in self.graph.districts.values() if d.nom == lot.district_origin), None)
-        end_node = next((d for d in self.graph.districts.values() if d.nom == destination_district), None)
-        
-        if not start_node or not end_node:
+            print(f"DEBUG: Lot not found with ID {lot_id}. Available keys: {list(self.lots.keys())}")
             return None
             
-        path_ids = self.astar.find_path(start_node.id, end_node.id)
+        print(f"DEBUG: Found lot: {lot.id}, origin: {lot.district_origin}, destination: {destination_district}")
+        
+        start_node = next((d for d in self.graph.districts.values() if d.nom.strip().lower() == lot.district_origin.strip().lower()), None)
+        end_node = next((d for d in self.graph.districts.values() if d.nom.strip().lower() == destination_district.strip().lower()), None)
+        
+        if not start_node or not end_node:
+            print(f"DEBUG: Could not find start node '{lot.district_origin}' or end node '{destination_district}'")
+            return None
+            
+        path_ids, distance = self.astar.chercher(start_node.id, end_node.id)
         if not path_ids:
+            print(f"DEBUG: A* found no path")
             return None
 
-        path_names = [self.graph.nodes[node_id].name for node_id in path_ids]
-        
-        # Mise à jour du lot
-        lot.status = "EN_TRANSIT"
-        lot.traceability.append({
-            "action": "TRANSPORT_OPTIMISE", 
-            "destination": destination_district, 
-            "chemin": path_names,
-            "timestamp": time.time()
-        })
+        path_names = [self.graph.districts[node_id].nom for node_id in path_ids]
         
         # Transaction Blockchain
         tx = Transaction(
@@ -102,4 +131,5 @@ class AgricultureManager:
         tx.signature = "SIG_COLLECTEUR_DEMO"
         self.blockchain.ajouter_transaction(tx)
         
-        return lot
+        print(f"DEBUG: Transport transaction for lot {lot_id} added to mempool.")
+        return lot, path_names

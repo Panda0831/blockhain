@@ -19,6 +19,12 @@ async def send_money(data: SendMoneyRequest):
         data.sender_id, data.receiver_id, data.amount, data.description
     )
     
+    if not transfer:
+        raise HTTPException(
+            status_code=400, 
+            detail="Solde insuffisant pour effectuer ce transfert."
+        )
+    
     save_state(
         blockchain_instance, 
         foncier_uf, 

@@ -5,11 +5,14 @@ from src.db.models import User
 from src.api.schemas.auth import UserSignUp, UserSignIn, Token
 from src.models.actors import Acteur, RoleActeur
 from src.utils.crypto import Crypto
+from src.utils.security import create_access_token, verify_password, ACCESS_TOKEN_EXPIRE_MINUTES
+from datetime import timedelta
 
 router = APIRouter()
 
 @router.post("/signup", response_model=Token)
 async def signup(user_in: UserSignUp, db: Session = Depends(get_db)):
+    print(f" [DEBUG] Tentative d'inscription: {user_in}")
     # Vérifier si l'utilisateur existe déjà
     user = db.query(User).filter(User.email == user_in.email).first()
     if user:
@@ -47,8 +50,12 @@ async def signup(user_in: UserSignUp, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     
+    access_token = create_access_token(
+        data={"sub": new_user.email}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+
     return {
-        "access_token": "fake-jwt-token", # On pourra implémenter le vrai JWT plus tard
+        "access_token": access_token,
         "token_type": "bearer",
         "username": new_user.username,
         "public_key": new_user.public_key,
@@ -70,8 +77,12 @@ async def signin(user_in: UserSignIn, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+
     return {
-        "access_token": "fake-jwt-token",
+        "access_token": access_token,
         "token_type": "bearer",
         "username": user.username,
         "public_key": user.public_key,

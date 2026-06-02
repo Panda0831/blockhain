@@ -15,9 +15,12 @@ import { palette } from '../theme/palette';
 import { landService } from '../services/api';
 import { Map, PlusCircle, CheckCircle, Clock3 } from '../components/Icons';
 import { FadeInView, SkeletonLoader } from '../components/Animations';
+import { BobModal } from '../components/BobModal';
 
 export default function LandScreen({ route }: any) {
+  const [manualPublicKey, setManualPublicKey] = useState('');
   const user = route.params?.user;
+  const activeKey = user?.public_key || manualPublicKey;
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'FONCIER';
   const [activeTab, setActiveTab] = useState<'my' | 'request' | 'admin'>(isAdmin ? 'admin' : 'my');
   const [loading, setLoading] = useState(false);
@@ -29,14 +32,31 @@ export default function LandScreen({ route }: any) {
   // Request form
   const [docUrl, setDocUrl] = useState('');
   const [description, setDescription] = useState('');
+
+  // Action Modals State
+  const [actionModalVisible, setActionModalVisible] = useState(false);
+  const [transferModalVisible, setTransferModalVisible] = useState(false);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [selectedParcel, setSelectedParcel] = useState<string | null>(null);
+  const [transferBuyerId, setTransferBuyerId] = useState('');
+  const [transferBuyerName, setTransferBuyerName] = useState('');
+  const [userSearch, setUserSearch] = useState('');
+  const [showUserList, setShowUserList] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
   
   // Admin
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
 
   const fetchData = async () => {
+    if (!activeKey) {
+      setInitialLoading(false);
+      return;
+    }
     try {
+      console.log("[DEBUG] Fetching parcels for activeKey:", activeKey);
       if (activeTab === 'my') {
-        const res = await landService.getParcelsByOwner(user.public_key);
+        const res = await landService.getParcelsByOwner(activeKey);
+        console.log("[DEBUG] Received parcels:", res);
         setMyParcels(res);
       } else if (activeTab === 'admin') {
         const res = await landService.getPending();
@@ -49,28 +69,49 @@ export default function LandScreen({ route }: any) {
     }
   };
 
+  const fetchUsers = async () => {
+    // Muted for demo
+    console.log(" [DEBUG] Skipping user fetch for demo stability");
+    setUsers([]);
+  };
+
   useEffect(() => {
     fetchData();
+    fetchUsers();
   }, [activeTab]);
 
+
+
+  const selectBuyer = (user: any) => {
+    setTransferBuyerId(user.public_key);
+    setTransferBuyerName(user.username);
+    setShowUserList(false);
+    setUserSearch('');
+  };
+
+  const filteredUsers = users.filter(u => 
+    u.username.toLowerCase().includes(userSearch.toLowerCase()) ||
+    u.public_key.toLowerCase().includes(userSearch.toLowerCase())
+  );
+
   const handleRequest = async () => {
-    if (!docUrl) return;
+    if (!docUrl || !activeKey) return;
     setLoading(true);
     try {
-      await api_submit_request(); // Simulation ou appel réel
-      Alert.alert('Succès', 'Demande d’immatriculation envoyée');
+      await landService.request({
+        requester_id: activeKey,
+        document_url: docUrl,
+        description: description
+      });
+      Alert.alert('Succès', 'Demande d’immatriculation envoyée au cadastre');
       setDocUrl('');
       setDescription('');
+      fetchData();
     } catch (error) {
-      Alert.alert('Erreur', 'Échec de l’envoi');
+      Alert.alert('Erreur', 'Échec de l’envoi de la demande');
     } finally {
       setLoading(false);
     }
-  };
-
-  // Mock API call if not in service
-  const api_submit_request = async () => {
-     // Implementation réelle via service si disponible
   };
 
   const handleApprove = async (id: number) => {
@@ -87,14 +128,16 @@ export default function LandScreen({ route }: any) {
   };
 
   const renderParcelItem = ({ item }: { item: string }) => (
-    <FadeInView style={styles.card}>
-      <Map color={palette.accent} size={24} />
-      <View style={styles.cardInfo}>
-        <Text style={styles.cardTitle}>{item}</Text>
-        <Text style={styles.cardSub}>Titre Certifié Hazo Lova</Text>
-      </View>
-      <CheckCircle color={palette.accent} size={20} />
-    </FadeInView>
+    <TouchableOpacity onPress={() => { setSelectedParcel(item); setActionModalVisible(true); }}>
+      <FadeInView style={styles.card}>
+        <Map color={palette.accent} size={24} />
+        <View style={styles.cardInfo}>
+          <Text style={styles.cardTitle}>{item}</Text>
+          <Text style={styles.cardSub}>Titre Certifié Hazo Lova</Text>
+        </View>
+        <CheckCircle color={palette.accent} size={20} />
+      </FadeInView>
+    </TouchableOpacity>
   );
 
   return (
@@ -103,6 +146,19 @@ export default function LandScreen({ route }: any) {
         <Map color={palette.accent} size={32} />
         <Text style={styles.title}>Module Foncier</Text>
       </View>
+
+      {!activeKey && (
+        <View style={{ padding: 20 }}>
+          <Text style={styles.label}>Entrer votre Clé Publique (Mode Démo)</Text>
+          <TextInput 
+            style={styles.input} 
+            value={manualPublicKey} 
+            onChangeText={setManualPublicKey} 
+            placeholder="0x..." 
+            placeholderTextColor={palette.gray} 
+          />
+        </View>
+      )}
 
       <View style={styles.tabBar}>
         <TouchableOpacity 
@@ -193,6 +249,75 @@ export default function LandScreen({ route }: any) {
           </View>
         )}
       </View>
+      {/* Action Selection Modal */}
+      <BobModal visible={actionModalVisible} onClose={() => setActionModalVisible(false)} title="Options">
+        <TouchableOpacity style={styles.button} onPress={() => { setActionModalVisible(false); setTransferModalVisible(true); }}>
+          <Text style={styles.buttonText}>Céder</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.button, { backgroundColor: palette.gray }]} onPress={() => { setActionModalVisible(false); setDetailsModalVisible(true); }}>
+          <Text style={styles.buttonText}>Détails</Text>
+        </TouchableOpacity>
+      </BobModal>
+
+      {/* Transfer Modal */}
+      <BobModal visible={transferModalVisible} onClose={() => setTransferModalVisible(false)} title="Céder la Parcelle">
+          <View style={styles.inputGroup}>
+            <TextInput 
+              style={styles.modalInput} 
+              placeholder="Rechercher l'Acheteur..." 
+              value={transferBuyerName || userSearch}
+              onChangeText={(txt) => {
+                if (transferBuyerName) { setTransferBuyerName(''); setTransferBuyerId(''); }
+                setUserSearch(txt);
+                setShowUserList(true);
+              }}
+              onFocus={() => setShowUserList(true)}
+              placeholderTextColor={palette.gray}
+            />
+          </View>
+
+          {showUserList && userSearch.length > 0 && (
+            <View style={styles.userDropdown}>
+              {filteredUsers.slice(0, 5).map((u) => (
+                <TouchableOpacity 
+                  key={u.public_key} 
+                  style={styles.userSelectItem}
+                  onPress={() => selectBuyer(u)}
+                >
+                  <View style={styles.userAvatarSmall}>
+                    <Text style={styles.avatarTextSmall}>{u.username[0].toUpperCase()}</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.userSelectName}>{u.username}</Text>
+                    <Text style={styles.userSelectKey}>{u.public_key.substring(0, 15)}...</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+              {filteredUsers.length === 0 && <Text style={styles.noUser}>Aucun utilisateur trouvé</Text>}
+            </View>
+          )}
+
+        <TouchableOpacity style={styles.button} onPress={async () => {
+             if (!transferBuyerId) return;
+             setLoading(true);
+             try {
+                await landService.transfer({ parcel_id: selectedParcel, seller_id: activeKey, buyer_id: transferBuyerId });
+                Alert.alert('Succès', 'Transféré');
+                setTransferModalVisible(false);
+                setTransferBuyerId('');
+                setTransferBuyerName('');
+                fetchData();
+             } catch(e) { Alert.alert('Erreur', 'Échec'); } finally { setLoading(false); }
+        }}>
+          <Text style={styles.buttonText}>Confirmer le transfert</Text>
+        </TouchableOpacity>
+      </BobModal>
+
+      {/* Details Modal */}
+      <BobModal visible={detailsModalVisible} onClose={() => setDetailsModalVisible(false)} title="Détails">
+        <Text>Parcelle: {selectedParcel}</Text>
+        <Text>Propriétaire actuel: Vous</Text>
+      </BobModal>
     </SafeAreaView>
   );
 }

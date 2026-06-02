@@ -13,9 +13,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette } from '../theme/palette';
-import { microfinanceService, authService } from '../services/api';
-import { Database, PlusCircle, CheckCircle, RefreshCw, Search } from '../components/Icons';
+import { microfinanceService, authService, blockchainService } from '../services/api';
+import { Database, PlusCircle, CheckCircle, RefreshCw, Search, Clock3, Wallet, TrendingUp } from '../components/Icons';
 import { FadeInView, SkeletonLoader } from '../components/Animations';
+import { WalletPaymentCard } from '../components/WalletPaymentCard';
+import { SimpleLineChart } from '../components/SimpleLineChart';
 
 export default function FinanceScreen({ route }: any) {
   const user = route.params?.user;
@@ -24,6 +26,8 @@ export default function FinanceScreen({ route }: any) {
   const [activeTab, setActiveTab] = useState<'send' | 'wallet'>('send');
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [balance, setBalance] = useState(0);
+  const [history, setHistory] = useState<number[]>([]);
   
   // Send form
   const [receiverId, setReceiverId] = useState('');
@@ -40,17 +44,40 @@ export default function FinanceScreen({ route }: any) {
   const [pendingTransfers, setPendingTransfers] = useState<any[]>([]);
 
   useEffect(() => {
+    fetchBalance();
+    fetchPendingTransfers(); // Toujours fetch au début
+  }, []);
+
+  useEffect(() => {
     if (activeTab === 'wallet') {
       fetchPendingTransfers();
     }
   }, [activeTab]);
 
-  const fetchPendingTransfers = async () => {
+  const fetchBalance = async () => {
     if (!userPublicKey) return;
+    try {
+      const [res, histRes] = await Promise.all([
+        blockchainService.getBalance(userPublicKey),
+        blockchainService.getBalanceHistory(userPublicKey)
+      ]);
+      setBalance(res.balance);
+      setHistory(histRes.history);
+    } catch (e) {
+      console.error("Données indisponibles", e);
+    }
+  };
+
+  const fetchPendingTransfers = async () => {
+    if (!userPublicKey) {
+      setInitialLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const data = await microfinanceService.getPendingTransfers(userPublicKey);
       setPendingTransfers(data);
+      fetchBalance();
     } catch (error) {
       console.error(error);
     } finally {
@@ -91,13 +118,18 @@ export default function FinanceScreen({ route }: any) {
         amount: parseFloat(amount),
         description: description
       });
-      Alert.alert('Succès', 'Demande envoyée !');
+      Alert.alert(
+        'Demande envoyée', 
+        'Votre transfert est maintenant dans le mempool. Il apparaîtra chez le destinataire dès qu\'un bloc sera miné.'
+      );
       setReceiverId('');
       setReceiverName('');
       setAmount('');
       setDescription('');
-    } catch (error) {
-      Alert.alert('Erreur', 'Échec de l\'envoi');
+      fetchBalance(); // Rafraîchir le solde
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.detail || 'Échec de l\'envoi';
+      Alert.alert('Erreur', errorMsg);
     } finally {
       setLoading(false);
     }
@@ -107,10 +139,14 @@ export default function FinanceScreen({ route }: any) {
     setLoading(true);
     try {
       await microfinanceService.acceptTransfer(transferId);
-      Alert.alert('Succès', 'Argent reçu sur la blockchain !');
+      Alert.alert(
+        'Transfert Accepté', 
+        'L\'argent a été envoyé au mempool. Le solde sera mis à jour une fois le bloc miné.'
+      );
       fetchPendingTransfers();
-    } catch (error) {
-      Alert.alert('Erreur', 'Échec de l\'acceptation');
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.detail || 'Échec de l\'acceptation';
+      Alert.alert('Erreur', errorMsg);
     } finally {
       setLoading(false);
     }
@@ -134,20 +170,13 @@ export default function FinanceScreen({ route }: any) {
   );
 
   const renderTransferItem = ({ item }: { item: any }) => (
-    <FadeInView style={styles.card}>
-      <View style={styles.info}>
-        <Text style={styles.amountText}>{item.amount} Ar</Text>
-        <Text style={styles.descText}>{item.description}</Text>
-        <Text style={styles.senderText}>De: {item.sender_id.substring(0, 15)}...</Text>
-      </View>
-      <TouchableOpacity 
-        style={styles.acceptBtn} 
-        onPress={() => handleAccept(item.id)}
-        disabled={loading}
-      >
-        <CheckCircle color="white" size={20} />
-      </TouchableOpacity>
-    </FadeInView>
+    <WalletPaymentCard
+      amount={item.amount}
+      description={item.description}
+      senderId={item.sender_id}
+      onAccept={() => handleAccept(item.id)}
+      loading={loading}
+    />
   );
 
   return (
@@ -175,6 +204,24 @@ export default function FinanceScreen({ route }: any) {
       <View style={styles.content}>
         {activeTab === 'send' && (
           <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+            <FadeInView style={styles.balanceCard}>
+               <View style={{ flex: 1 }}>
+                 <Text style={styles.balanceLabel}>Solde Confirmé</Text>
+                 <Text style={styles.balanceValue}>{balance.toLocaleString()} Ar</Text>
+               </View>
+               <TouchableOpacity onPress={fetchBalance} style={styles.refreshBalance}>
+                  <RefreshCw color="white" size={20} />
+               </TouchableOpacity>
+            </FadeInView>
+
+            <FadeInView style={styles.chartContainer}>
+               <View style={styles.chartHeader}>
+                  <TrendingUp color={palette.accent} size={18} />
+                  <Text style={styles.chartTitle}>Évolution</Text>
+               </View>
+               <SimpleLineChart data={history} height={100} />
+            </FadeInView>
+
             <FadeInView style={styles.form}>
               <Text style={styles.sectionTitle}>Nouveau Transfert</Text>
               
@@ -225,7 +272,7 @@ export default function FinanceScreen({ route }: any) {
         )}
 
         {activeTab === 'wallet' && (
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, width: '100%', minHeight: 300 }}>
             {initialLoading ? (
                <View style={{ gap: 10 }}>
                  <SkeletonLoader style={{ height: 80 }} />
@@ -239,6 +286,7 @@ export default function FinanceScreen({ route }: any) {
                 ListEmptyComponent={<Text style={styles.empty}>Aucun transfert en attente</Text>}
                 onRefresh={fetchPendingTransfers}
                 refreshing={loading}
+                contentContainerStyle={{ paddingBottom: 20 }}
               />
             )}
           </View>
@@ -281,6 +329,27 @@ const styles = StyleSheet.create({
   tabText: { color: palette.gray, fontWeight: '600' },
   activeTabText: { color: palette.accent },
   content: { flex: 1, padding: 20 },
+  balanceCard: { 
+    backgroundColor: palette.secondary, 
+    borderRadius: 24, 
+    padding: 25, 
+    marginBottom: 15, 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5
+  },
+  balanceLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+  balanceValue: { color: 'white', fontSize: 32, fontWeight: '900', marginTop: 5 },
+  refreshBalance: { backgroundColor: 'rgba(255,255,255,0.2)', padding: 12, borderRadius: 15 },
+  chartMini: { background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 5 },
+  chartContainer: { backgroundColor: palette.surface, borderRadius: 20, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: palette.lightGray },
+  chartHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 15 },
+  chartTitle: { fontSize: 14, fontWeight: '800', color: palette.ink },
   form: { backgroundColor: palette.surface, borderRadius: 20, padding: 20, elevation: 2 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: palette.ink },
   label: { fontSize: 14, fontWeight: '600', marginBottom: 8, color: palette.gray },
@@ -306,20 +375,6 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   buttonText: { color: 'white', fontWeight: 'bold', marginLeft: 10 },
-  card: { 
-    backgroundColor: palette.surface, 
-    borderRadius: 16, 
-    padding: 18, 
-    marginBottom: 12, 
-    flexDirection: 'row', 
-    alignItems: 'center',
-    elevation: 2
-  },
-  info: { flex: 1 },
-  amountText: { fontSize: 22, fontWeight: '900', color: palette.accent },
-  descText: { fontSize: 14, color: palette.ink, marginTop: 2, fontWeight: '600' },
-  senderText: { fontSize: 11, color: palette.gray, marginTop: 4 },
-  acceptBtn: { backgroundColor: palette.accent, padding: 12, borderRadius: 12 },
   empty: { textAlign: 'center', marginTop: 40, color: palette.gray },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: palette.surface, borderTopLeftRadius: 25, borderTopRightRadius: 25, padding: 25 },

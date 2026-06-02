@@ -14,12 +14,18 @@ import { blockchainService } from '../services/api';
 import DashboardCard from '../components/DashboardCard';
 import TimelineRow from '../components/TimelineRow';
 import SignalRow from '../components/SignalRow';
-import { Database, Shield, Activity, RefreshCw, Bell } from '../components/Icons';
+import { Database, Shield, Activity, RefreshCw, Bell, Brain } from '../components/Icons';
 import { FadeInView } from '../components/Animations';
 import { NotificationBell } from '../components/NotificationBell';
 
 export default function DashboardScreen({ route, navigation }: any) {
-  const user = route.params?.user || {};
+  console.log("DashboardScreen route:", route);
+  const user = route?.params?.user ?? { 
+    username: 'Citoyen', 
+    public_key: '', 
+    role: 'User' 
+  };
+  console.log("DashboardScreen user:", user);
   const [status, setStatus] = useState<any>(null);
   const [blocks, setBlocks] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -113,6 +119,11 @@ export default function DashboardScreen({ route, navigation }: any) {
         <FadeInView delay={500} style={styles.section}>
           <Text style={styles.sectionTitle}>Signaux Système</Text>
           <View style={styles.card}>
+            <SignalRow 
+              label="Leader Élu par IA" 
+              status={status?.leader_node || "N/A"} 
+              icon={<Brain color={palette.accent} size={16} />} 
+            />
             <SignalRow 
               label="Validation IA (Q-Learning)" 
               status="ACTIVE" 

@@ -30,10 +30,10 @@ class TasBinaire:
         """
         if self.est_vide():
             return None
-
+            # si le tas contient un seul élément, on le retourne directement
         if len(self.tas) == 1:
             return self.tas.pop()
-
+        # sinon, on extrait l'élément de la racine et on le remonte
         racine = self.tas[0]
         self.tas[0] = self.tas.pop()
         self._descendre(0)

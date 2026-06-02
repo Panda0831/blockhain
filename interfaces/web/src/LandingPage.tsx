@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   ShieldCheck, 
   Map, 
@@ -8,7 +8,10 @@ import {
   ArrowRight,
   Globe,
   Database,
-  Users
+  Users,
+  Activity,
+  Award,
+  Leaf
 } from 'lucide-react';
 import './App.css';
 
@@ -22,8 +25,11 @@ export default function LandingPage() {
         <nav className="navbar">
           <div className="logo">HAZO LOVA</div>
           <div className="nav-links">
-            <a href="#features" className="nav-link">Secteurs</a>
-            <a href="#vision" className="nav-link">Vision 2035</a>
+            <Link to="/dashboard" className="nav-link"><Activity size={14} style={{ display: 'inline' }} /> Dashboard</Link>
+            <Link to="/land" className="nav-link"><Map size={14} style={{ display: 'inline' }} /> Foncier</Link>
+            <Link to="/finance" className="nav-link"><Database size={14} style={{ display: 'inline' }} /> Finance</Link>
+            <Link to="/agri" className="nav-link"><Leaf size={14} style={{ display: 'inline' }} /> Agri</Link>
+            <Link to="/education" className="nav-link"><Award size={14} style={{ display: 'inline' }} /> Diplôme</Link>
             <button className="btn-nav-auth" onClick={() => navigate('/auth')}>
               Espace Client
             </button>

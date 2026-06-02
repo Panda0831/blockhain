@@ -46,6 +46,7 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
       } else {
         data = await authService.signUp({ username, email, password, role });
       }
+      console.log("[DEBUG Login] User data received:", JSON.stringify(data));
       navigation.replace('Main', { user: data });
     } catch (error: any) {
       alert(error.response?.data?.detail || 'Erreur d\'authentification');

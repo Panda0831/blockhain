@@ -1,11 +1,14 @@
 import hashlib
+import re
 import secrets
-import ecdsa
+
 import bcrypt
+import ecdsa
+
 
 class Crypto:
     """
-    Une implémentation utilisant le module 'ecdsa' pour la signature numérique 
+    Une implémentation utilisant le module 'ecdsa' pour la signature numérique
     sur courbe elliptique (ECDSA) et 'bcrypt' pour la sécurité des mots de passe.
     """
 
@@ -15,20 +18,32 @@ class Crypto:
     G = (ecdsa.SECP256k1.generator.x(), ecdsa.SECP256k1.generator.y())
 
     @staticmethod
+    # supprimant les caractères non alphanumériques et en convertissant en minuscules
+    def normalize_key(key: str) -> str:
+        """Nettoyage agressif des clés pour la comparaison entre différents formats."""
+        if not key:
+            return ""
+        norm = re.sub(r"[^a-zA-Z0-9]", "", str(key)).lower()
+        # print(f" [DEBUG] Normalisation: '{key}' -> '{norm}'")
+        return norm
+
+    @staticmethod
     def hacher_mot_de_passe(mot_de_passe: str) -> str:
         """Hache un mot de passe de manière sécurisée avec bcrypt."""
         # bcrypt attend des bytes
-        password_bytes = mot_de_passe.encode('utf-8')
-        salt = bcrypt.gensalt()
-        hashed = bcrypt.hashpw(password_bytes, salt)
-        return hashed.decode('utf-8')
+        password_bytes = mot_de_passe.encode("utf-8")
+        salt = bcrypt.gensalt()  # génère un sel aléatoire
+        hashed = bcrypt.hashpw(
+            password_bytes, salt
+        )  # hache le mot de passe avec le sel
+        return hashed.decode("utf-8")
 
     @staticmethod
     def verifier_mot_de_passe(mot_de_passe_clair: str, mot_de_passe_hache: str) -> bool:
         """Vérifie si un mot de passe correspond à son empreinte hachée."""
         try:
-            password_bytes = mot_de_passe_clair.encode('utf-8')
-            hashed_bytes = mot_de_passe_hache.encode('utf-8')
+            password_bytes = mot_de_passe_clair.encode("utf-8")
+            hashed_bytes = mot_de_passe_hache.encode("utf-8")
             return bcrypt.checkpw(password_bytes, hashed_bytes)
         except Exception:
             return False

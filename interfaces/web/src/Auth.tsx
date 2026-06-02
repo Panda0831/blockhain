@@ -1,47 +1,107 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  ChevronRight, 
-  ShieldCheck, 
-  Zap,
-  Loader2,
-  Lock,
-  Globe,
+import {
+  ArrowLeft,
+  ChevronRight,
   Database,
   FileCheck,
+  Globe,
+  Loader2,
+  Lock,
+  Map as MapIcon,
+  ShieldCheck,
   Trees,
-  Map as MapIcon
-} from 'lucide-react';
-import { authService } from './services/api';
-import './auth.css';
+  Zap,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "./auth.css";
+import { authService } from "./services/api";
 
 const BlockchainGraph = () => {
   const [blockHeight, setBlockHeight] = useState(842051);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setBlockHeight(prev => prev + 1);
+      setBlockHeight((prev) => prev + 1);
     }, 4000);
     return () => clearInterval(interval);
   }, []);
 
   const nodes = [
-    { id: 1, label: 'GENÈSE', icon: <ShieldCheck size={14} />, x: 50, y: 35, delay: '0s', type: 'core' },
-    { id: 2, label: 'TERRAIN', icon: <MapIcon size={14} />, x: 25, y: 45, delay: '-2s', type: 'asset' },
-    { id: 3, label: 'FORÊT', icon: <Trees size={14} />, x: 75, y: 45, delay: '-4s', type: 'asset' },
-    { id: 4, label: 'TITRE', icon: <FileCheck size={14} />, x: 50, y: 55, delay: '-1s', type: 'cert' },
-    { id: 5, label: 'IDENTITÉ', icon: <Lock size={14} />, x: 20, y: 70, delay: '-3s', type: 'user' },
-    { id: 6, label: 'CONTRAT', icon: <Database size={14} />, x: 80, y: 70, delay: '-5s', type: 'cert' },
-    { id: 7, label: 'VALIDATION', icon: <Zap size={14} />, x: 50, y: 80, delay: '-6s', type: 'core' },
+    {
+      id: 1,
+      label: "GENÈSE",
+      icon: <ShieldCheck size={14} />,
+      x: 50,
+      y: 35,
+      delay: "0s",
+      type: "core",
+    },
+    {
+      id: 2,
+      label: "TERRAIN",
+      icon: <MapIcon size={14} />,
+      x: 25,
+      y: 45,
+      delay: "-2s",
+      type: "asset",
+    },
+    {
+      id: 3,
+      label: "FORÊT",
+      icon: <Trees size={14} />,
+      x: 75,
+      y: 45,
+      delay: "-4s",
+      type: "asset",
+    },
+    {
+      id: 4,
+      label: "TITRE",
+      icon: <FileCheck size={14} />,
+      x: 50,
+      y: 55,
+      delay: "-1s",
+      type: "cert",
+    },
+    {
+      id: 5,
+      label: "IDENTITÉ",
+      icon: <Lock size={14} />,
+      x: 20,
+      y: 70,
+      delay: "-3s",
+      type: "user",
+    },
+    {
+      id: 6,
+      label: "CONTRAT",
+      icon: <Database size={14} />,
+      x: 80,
+      y: 70,
+      delay: "-5s",
+      type: "cert",
+    },
+    {
+      id: 7,
+      label: "VALIDATION",
+      icon: <Zap size={14} />,
+      x: 50,
+      y: 80,
+      delay: "-6s",
+      type: "core",
+    },
   ];
 
   const connections = [
-    { from: 1, to: 2 }, { from: 1, to: 3 },
-    { from: 2, to: 4 }, { from: 3, to: 4 },
-    { from: 4, to: 7 }, { from: 5, to: 7 },
-    { from: 6, to: 7 }, { from: 5, to: 4 },
-    { from: 6, to: 4 }
+    { from: 1, to: 2 },
+    { from: 1, to: 3 },
+    { from: 2, to: 4 },
+    { from: 3, to: 4 },
+    { from: 4, to: 7 },
+    { from: 5, to: 7 },
+    { from: 6, to: 7 },
+    { from: 5, to: 4 },
+    { from: 6, to: 4 },
   ];
 
   return (
@@ -50,21 +110,23 @@ const BlockchainGraph = () => {
         <span className="counter-label">BLOC ACTUEL</span>
         <span className="counter-value">#{blockHeight.toLocaleString()}</span>
       </div>
-      
+
       <svg className="graph-lines">
         {connections.map((conn, i) => {
-          const from = nodes.find(n => n.id === conn.from);
-          const to = nodes.find(n => n.id === conn.to);
+          const from = nodes.find((n) => n.id === conn.from);
+          const to = nodes.find((n) => n.id === conn.to);
           return (
             <g key={i}>
-              <line 
-                x1={`${from.x}%`} y1={`${from.y}%`} 
-                x2={`${to.x}%`} y2={`${to.y}%`} 
+              <line
+                x1={`${from.x}%`}
+                y1={`${from.y}%`}
+                x2={`${to.x}%`}
+                y2={`${to.y}%`}
                 className="base-line"
               />
               <circle r="2" className="traveling-dot">
-                <animateMotion 
-                  dur={`${3 + Math.random() * 4}s`} 
+                <animateMotion
+                  dur={`${3 + Math.random() * 4}s`}
                   repeatCount="indefinite"
                   path={`M ${from.x * 4},${from.y * 4} L ${to.x * 4},${to.y * 4}`}
                 />
@@ -73,29 +135,40 @@ const BlockchainGraph = () => {
           );
         })}
       </svg>
-      {nodes.map(node => (
-        <div 
-          key={node.id} 
+      {nodes.map((node) => (
+        <div
+          key={node.id}
           className={`graph-node-wrapper node-type-${node.type}`}
-          style={{ 
-            left: `${node.x}%`, 
+          style={{
+            left: `${node.x}%`,
             top: `${node.y}%`,
-            animationDelay: node.delay 
+            animationDelay: node.delay,
           }}
         >
           <div className="graph-node">
             <div className="node-icon">{node.icon}</div>
             <div className="node-info">
               <span className="node-label">{node.label}</span>
-              <span className="node-hash">0x{Math.random().toString(16).substring(2, 6).toUpperCase()}</span>
+              <span className="node-hash">
+                0x{Math.random().toString(16).substring(2, 6).toUpperCase()}
+              </span>
             </div>
           </div>
         </div>
       ))}
       <div className="hashes-bg">
         {Array.from({ length: 15 }).map((_, i) => (
-          <div key={i} className="hash-line" style={{ top: `${i * 6}%`, animationDelay: `${i * 0.8}s`, opacity: 0.05 - (i * 0.002) }}>
-            BLOCK_{blockHeight - i} :: SIG: {Math.random().toString(16).substring(2, 14).toUpperCase()}...
+          <div
+            key={i}
+            className="hash-line"
+            style={{
+              top: `${i * 6}%`,
+              animationDelay: `${i * 0.8}s`,
+              opacity: 0.05 - i * 0.002,
+            }}
+          >
+            BLOCK_{blockHeight - i} :: SIG:{" "}
+            {Math.random().toString(16).substring(2, 14).toUpperCase()}...
           </div>
         ))}
       </div>
@@ -108,16 +181,20 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: ''
+    username: "",
+    email: "",
+    password: "",
+    role: "CITOYEN",
+    district: "Antananarivo",
   });
-  
+
   const navigate = useNavigate();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,21 +206,23 @@ function AuthPage() {
       if (isLogin) {
         const data = await authService.signIn({
           email: formData.email,
-          password: formData.password
+          password: formData.password,
         });
-        localStorage.setItem('user', JSON.stringify(data));
-        navigate('/dashboard');
+        localStorage.setItem("user", JSON.stringify(data));
+        navigate("/dashboard");
       } else {
         await authService.signUp({
           username: formData.username,
           email: formData.email,
-          password: formData.password
+          password: formData.password,
+          role: formData.role,
+          district: formData.district,
         });
-        alert('Compte créé avec succès !');
+        alert("Compte créé avec succès !");
         setIsLogin(true);
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur de connexion au réseau');
+      setError(err.response?.data?.detail || "Erreur de connexion au réseau");
     } finally {
       setLoading(false);
     }
@@ -152,7 +231,7 @@ function AuthPage() {
   return (
     <div className="auth-page-wrapper">
       <div className="noise-overlay"></div>
-      
+
       {/* PANEL GAUCHE - Blockchain Vivante */}
       <div className="auth-side-branding">
         <div className="branding-header">
@@ -174,10 +253,11 @@ function AuthPage() {
         </div>
 
         <BlockchainGraph />
-        
+
         <div className="branding-footer-area">
           <p className="branding-quote">
-            "Sécuriser l'héritage foncier et forestier de Madagascar par la preuve mathématique."
+            "Sécuriser l'héritage foncier et forestier de Madagascar par la
+            preuve mathématique."
           </p>
           <div className="branding-footer">
             © 2026 Projet Madagascar 2035 — Service Public Décentralisé
@@ -194,50 +274,67 @@ function AuthPage() {
         <div className="auth-form-container animate-fade">
           <div className="auth-card-modern">
             <div className="auth-tabs">
-              <button 
-                className={`tab-btn ${isLogin ? 'active' : ''}`}
+              <button
+                className={`tab-btn ${isLogin ? "active" : ""}`}
                 onClick={() => setIsLogin(true)}
               >
                 Connexion
               </button>
-              <button 
-                className={`tab-btn ${!isLogin ? 'active' : ''}`}
+              <button
+                className={`tab-btn ${!isLogin ? "active" : ""}`}
                 onClick={() => setIsLogin(false)}
               >
                 Inscription
               </button>
-              <div className={`tab-indicator ${isLogin ? 'left' : 'right'}`}></div>
+              <div
+                className={`tab-indicator ${isLogin ? "left" : "right"}`}
+              ></div>
             </div>
 
             <h1 className="auth-title-modern">
-              {isLogin ? 'Authentification' : 'Rejoindre le réseau'}
+              {isLogin ? "Authentification" : "Rejoindre le réseau"}
             </h1>
-            
+
             {error && <div className="error-message-modern">{error}</div>}
 
             <form onSubmit={handleSubmit} className="premium-form">
               {!isLogin && (
-                <div className="form-group-modern">
-                  <label className="label-modern">Identité</label>
-                  <input 
-                    type="text" 
-                    name="username"
-                    className="input-modern" 
-                    placeholder="Nom complet" 
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    required={!isLogin}
-                  />
-                </div>
+                <>
+                  <div className="form-group-modern">
+                    <label className="label-modern">Identité</label>
+                    <input
+                      type="text"
+                      name="username"
+                      className="input-modern"
+                      placeholder="Nom complet"
+                      value={formData.username}
+                      onChange={handleInputChange}
+                      required={!isLogin}
+                    />
+                  </div>
+                  <div className="form-group-modern">
+                    <label className="label-modern">Rôle</label>
+                    <select
+                      name="role"
+                      className="input-modern"
+                      value={formData.role}
+                      onChange={handleInputChange}
+                    >
+                      <option value="CITOYEN">Citoyen</option>
+                      <option value="MINEUR">Mineur</option>
+                      <option value="UNIVERSITE">Université</option>
+                    </select>
+                  </div>
+                </>
               )}
 
               <div className="form-group-modern">
                 <label className="label-modern">Email Réseau</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   name="email"
-                  className="input-modern" 
-                  placeholder="nom@hazolova.mg" 
+                  className="input-modern"
+                  placeholder="nom@hazolova.mg"
                   value={formData.email}
                   onChange={handleInputChange}
                   required
@@ -246,21 +343,23 @@ function AuthPage() {
 
               <div className="form-group-modern">
                 <label className="label-modern">Clé d'accès</label>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   name="password"
-                  className="input-modern" 
-                  placeholder="••••••••" 
+                  className="input-modern"
+                  placeholder="••••••••"
                   value={formData.password}
                   onChange={handleInputChange}
                   required
                 />
               </div>
-              
+
               <button className="btn-modern" disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" size={18} /> : (
+                {loading ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
                   <>
-                    {isLogin ? 'Se connecter' : 'Valider mon accès'}
+                    {isLogin ? "Se connecter" : "Valider mon accès"}
                     <ChevronRight size={18} />
                   </>
                 )}
@@ -271,10 +370,10 @@ function AuthPage() {
 
             <div className="social-grid">
               <button className="btn-modern btn-secondary-modern id-mada">
-                <ShieldCheck size={18} color="#2D7A58" /> ID-Mada
+                <ShieldCheck size={18} color="#2D7A58" /> Mobile
               </button>
               <button className="btn-modern btn-secondary-modern express">
-                <Zap size={18} color="#D4A373" /> Express
+                <Zap size={18} color="#D4A373" /> Google
               </button>
             </div>
 

@@ -30,7 +30,7 @@ def test_cycle_signature_et_validation():
         expediteur=publique,
         destinataire=destinataire_publique,
         donnees="500kg de Vanille Bourbon",
-        secteur=SecteurActivite.VANILLE,
+        secteur=SecteurActivite.PRODUITS_AGRICOLES,
         description="Vente Antalaha - Export"
     )
     

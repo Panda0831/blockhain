@@ -21,7 +21,8 @@ export default function DiplomaScreen({ route }: any) {
   const userRole = user?.role || 'CITOYEN';
   const isAdmin = ['ADMIN', 'UNIVERSITE', 'MINISTERE'].includes(userRole.toUpperCase());
 
-  const [activeTab, setActiveTab] = useState<'request' | 'verify' | 'admin'>(isAdmin ? 'admin' : 'request');
+  const [activeTab, setActiveTab] = useState<'request' | 'verify' | 'admin' | 'my'>(isAdmin ? 'admin' : 'request');
+  const [diplomas, setDiplomas] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
   // Form fields
@@ -38,9 +39,23 @@ export default function DiplomaScreen({ route }: any) {
   // Admin fields
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
 
+  const fetchDiplomas = async () => {
+    setLoading(true);
+    try {
+        const data = await educationService.getDiplomasByOwner(user.public_key);
+        setDiplomas(data);
+    } catch (error) {
+        console.error(error);
+    } finally {
+        setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'admin') {
       fetchPendingRequests();
+    } else if (activeTab === 'my') {
+      fetchDiplomas();
     }
   }, [activeTab]);
 
@@ -152,6 +167,12 @@ export default function DiplomaScreen({ route }: any) {
         >
           <Text style={[styles.tabText, activeTab === 'verify' && styles.activeTabText]}>Vérification</Text>
         </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'my' && styles.activeTab]} 
+          onPress={() => setActiveTab('my')}
+        >
+          <Text style={[styles.tabText, activeTab === 'my' && styles.activeTabText]}>Mes Diplômes</Text>
+        </TouchableOpacity>
         {isAdmin && (
           <TouchableOpacity 
             style={[styles.tab, activeTab === 'admin' && styles.activeTab]} 
@@ -217,6 +238,24 @@ export default function DiplomaScreen({ route }: any) {
           </FadeInView>
         )}
 
+        {activeTab === 'my' && (
+          <View style={{ flex: 1 }}>
+            <FlatList
+              data={diplomas}
+              keyExtractor={(item) => item.tx_hash}
+              renderItem={({ item }) => (
+                <View style={styles.card}>
+                    <View style={styles.cardInfo}>
+                        <Text style={styles.cardTitle}>{item.title}</Text>
+                        <Text style={styles.cardSub}>{item.university} - {item.year}</Text>
+                        <Text style={styles.cardId}>ID: {item.diploma_id}</Text>
+                    </View>
+                </View>
+              )}
+              ListEmptyComponent={<Text style={styles.empty}>Aucun diplôme trouvé</Text>}
+            />
+          </View>
+        )}
         {activeTab === 'admin' && (
           <View style={{ flex: 1 }}>
             <FlatList

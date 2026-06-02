@@ -59,6 +59,13 @@ class QLearningValidator:
         Met à jour la Q-Table selon l'équation de Bellman.
         Q(s, a) = Q(s, a) + alpha * [recompense + gamma * max(Q(s', a')) - Q(s, a)]
         """
+        # s : état actuel
+        # a : action effectuée
+        # r : récompense reçue
+        # s' : nouvel état atteint
+        # α (alpha) : taux d'apprentissage
+        # γ (gamma) : facteur d'actualisation du futur
+        # Q(s,a) : qualité estimée de l'action a dans l'état s
         self._initialiser_etat(etat)
         self._initialiser_etat(prochain_etat)
 
@@ -77,8 +84,12 @@ class QLearningValidator:
         # Conversion des clés int en str pour JSON
         data_to_save = {str(k): v for k, v in self.q_table.items()}
         os.makedirs(os.path.dirname(chemin), exist_ok=True)
-        with open(chemin, "w") as f:
-            json.dump(data_to_save, f, indent=4)
+        try:
+            with open(chemin, "w") as f:
+                json.dump(data_to_save, f, indent=4)
+            print(f" [!] Cerveau sauvegardé avec succès dans {chemin}")
+        except Exception as e:
+            print(f" [!] Erreur lors de la sauvegarde du cerveau: {e}")
 
     def charger_cerveau(self, chemin: str = "data/q_table.json") -> None:
         """Charge un apprentissage précédent."""

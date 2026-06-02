@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Adresse IP de la machine hôte pour le développement mobile
-const API_URL = 'http://192.168.88.250:8000';
+const API_URL = 'http://192.168.155.6:8000';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -45,15 +45,27 @@ export const blockchainService = {
     const response = await api.get('/api/blockchain/pending-transactions');
     return response.data;
   },
+  getBalance: async (publicKey: string) => {
+    const response = await api.get(`/api/blockchain/balance/${encodeURIComponent(publicKey)}`);
+    return response.data;
+  },
+  getBalanceHistory: async (publicKey: string) => {
+    const response = await api.get(`/api/blockchain/balance/history/${encodeURIComponent(publicKey)}`);
+    return response.data;
+  },
 };
 
 export const landService = {
   getParcelsByOwner: async (publicKey: string) => {
-    const response = await api.get(`/api/land/owner/${publicKey}`);
+    const response = await api.get(`/api/land/owner/${encodeURIComponent(publicKey)}`);
     return response.data;
   },
   getPending: async () => {
     const response = await api.get('/api/land/pending');
+    return response.data;
+  },
+  request: async (requestData: { requester_id: string; document_url: string; description: string }) => {
+    const response = await api.post('/api/land/request', requestData);
     return response.data;
   },
   approve: async (requestId: number) => {
@@ -67,9 +79,21 @@ export const algoService = {
     const response = await api.get('/api/algo/districts');
     return response.data;
   },
+  findPath: async (startId: number, endId: number) => {
+    const response = await api.post('/api/algo/path', { start_id: startId, end_id: endId });
+    return response.data;
+  },
+  selectValidator: async (currentDistrictId: number) => {
+    const response = await api.post('/api/algo/select-validator', { current_district_id: currentDistrictId });
+    return response.data;
+  },
 };
 
 export const educationService = {
+  getDiplomasByOwner: async (studentId: string) => {
+    const response = await api.get(`/api/education/owner/${studentId}`);
+    return response.data;
+  },
   requestDiploma: async (diplomaData: { 
     student_id: string; 
     degree_title: string; 
@@ -124,6 +148,12 @@ export const agriService = {
   },
   getAllLots: async () => {
     const response = await api.get('/api/agriculture/all');
+    return response.data;
+  },
+  sellLot: async (lotData: { lot_id: string; buyer_id: string; price: number; seller_id: string }) => {
+    const response = await api.post('/api/agriculture/sell', lotData, {
+      headers: { 'public-key': lotData.seller_id }
+    });
     return response.data;
   },
 };

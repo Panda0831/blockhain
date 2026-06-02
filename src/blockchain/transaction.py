@@ -82,7 +82,7 @@ class Transaction:
         if self.expediteur in ["SYSTEM", "ADMIN_GOUVERNEMENT", "GOUVERNEMENT_FONCIER"]:
             return True
         
-        if self.signature in ["SIG_MOBILE_DEMO", "SIG_PROD_DEMO", "SIG_COLLECTEUR_DEMO", "SIG_ADMIN_DIPLOME", "SIG_FINANCE_DEMO"]:
+        if self.signature in ["SIG_MOBILE_DEMO", "SIG_PROD_DEMO", "SIG_COLLECTEUR_DEMO", "SIG_VENDEUR_DEMO", "SIG_ADMIN_DIPLOME", "SIG_FINANCE_DEMO"]:
             return True
 
         # 2. Vérification de la signature
@@ -106,3 +106,33 @@ class Transaction:
         return (f"Transaction({self.secteur.value}) : "
                 f"De {str(self.expediteur)[:10]}... à {str(self.destinataire)[:10]}... | "
                 f"Desc: {self.description}")
+
+    @staticmethod
+    def from_dict(data: dict):
+        """Reconstruit une transaction à partir d'un dictionnaire."""
+        tx = Transaction(
+            expediteur=data['expediteur'],
+            destinataire=data['destinataire'],
+            donnees=data['donnees'],
+            secteur=SecteurActivite(data['secteur']),
+            description=data.get('description', ''),
+            montant=data.get('montant', 0)
+        )
+        tx.horodatage = data['horodatage']
+        tx.signature = data.get('signature')
+        tx.hash = data['hash']
+        return tx
+
+    def to_dict(self):
+        """Convertit la transaction en dictionnaire pour propagation réseau."""
+        return {
+            "expediteur": self.expediteur,
+            "destinataire": self.destinataire,
+            "donnees": self.donnees,
+            "secteur": self.secteur.value,
+            "description": self.description,
+            "montant": self.montant,
+            "horodatage": self.horodatage,
+            "signature": self.signature,
+            "hash": self.hash
+        }

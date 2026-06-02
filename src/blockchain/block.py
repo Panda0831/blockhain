@@ -1,6 +1,7 @@
 import time
 
 from src.blockchain.merkle_tree import MerkleTree
+from src.blockchain.transaction import Transaction
 from src.utils.crypto import Crypto
 
 
@@ -47,7 +48,7 @@ class Block:
     def miner(self, difficulte):
         """
         Algorithme de Proof of Work (Preuve de Travail).
-        Incrémente le nonce jusqu'à ce que le hash commence par un nombre de zéros égal à la difficulté.
+        Incrémente le nonce jusqu'au hash cible.
         """
         cible = "0" * difficulte
         print(f" Minage du bloc {self.index} en cours (difficulté: {difficulte})...")
@@ -60,3 +61,30 @@ class Block:
 
     def __repr__(self):
         return f"Block(Index: {self.index}, Hash: {self.hash[:10]}..., Prev: {self.previous_hash[:10]}...)"
+
+    @staticmethod
+    def from_dict(data: dict):
+        """Reconstruit un bloc à partir d'un dictionnaire."""
+        transactions = [Transaction.from_dict(tx) for tx in data['transactions']]
+        bloc = Block(
+            index=data['index'],
+            transactions=transactions,
+            previous_hash=data['previous_hash'],
+            nonce=data['nonce']
+        )
+        bloc.timestamp = data['timestamp']
+        bloc.merkle_root = data['merkle_root']
+        bloc.hash = data['hash']
+        return bloc
+
+    def to_dict(self):
+        """Convertit le bloc en dictionnaire pour propagation réseau."""
+        return {
+            "index": self.index,
+            "timestamp": self.timestamp,
+            "transactions": [tx.to_dict() for tx in self.transactions],
+            "previous_hash": self.previous_hash,
+            "nonce": self.nonce,
+            "merkle_root": self.merkle_root,
+            "hash": self.hash
+        }

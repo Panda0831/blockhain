@@ -1,5 +1,6 @@
 from src.blockchain.block import Block
 from src.blockchain.transaction import Transaction, SecteurActivite
+from src.utils.crypto import Crypto
 
 class Blockchain:
     """
@@ -43,19 +44,11 @@ class Blockchain:
         :return: True si ajoutée, False sinon.
         """
         if not transaction.est_valide():
-            print(" [!] Transaction invalide : signature ou intégrité compromise.")
+            print(f" [!] Transaction REJETÉE : {transaction.description} (Exp: {transaction.expediteur}, Sig: {transaction.signature})")
             return False
             
         self.transactions_en_attente.append(transaction)
         return True
-
-    def ajouter_et_miner(self, transaction, adresse_mineur="GOUVERNEMENT_POOL"):
-        """
-        Wrapper pour ajouter une transaction et miner immédiatement un bloc.
-        """
-        if self.ajouter_transaction(transaction):
-            return self.miner_transactions_en_attente(adresse_mineur)
-        return None
 
     def miner_transactions_en_attente(self, adresse_mineur):
         """
@@ -132,13 +125,38 @@ class Blockchain:
         Parcourt toute la chaîne pour calculer le solde d'une adresse publique.
         """
         solde = 0.0
+        adresse_norm = Crypto.normalize_key(adresse)
         for bloc in self.chaine:
             for tx in bloc.transactions:
-                if tx.expediteur == adresse:
+                if Crypto.normalize_key(tx.expediteur) == adresse_norm:
                     solde -= tx.montant
-                if tx.destinataire == adresse:
+                if Crypto.normalize_key(tx.destinataire) == adresse_norm:
                     solde += tx.montant
         return solde
+
+    def obtenir_historique_solde(self, adresse):
+        """
+        Retourne l'évolution du solde d'une adresse au fil du temps (par bloc).
+        """
+        historique = [0.0]
+        solde_courant = 0.0
+        adresse_norm = Crypto.normalize_key(adresse)
+        for bloc in self.chaine:
+            a_bouge = False
+            for tx in bloc.transactions:
+                if Crypto.normalize_key(tx.expediteur) == adresse_norm:
+                    solde_courant -= tx.montant
+                    a_bouge = True
+                if Crypto.normalize_key(tx.destinataire) == adresse_norm:
+                    solde_courant += tx.montant
+                    a_bouge = True
+            if a_bouge:
+                historique.append(solde_courant)
+        
+        if len(historique) < 2:
+            historique.append(solde_courant)
+            
+        return historique
 
     def __repr__(self):
         return f"Blockchain(Blocks: {len(self.chaine)}, Pending: {len(self.transactions_en_attente)})"

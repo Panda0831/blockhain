@@ -18,6 +18,12 @@ import {
   Award,
   CheckCircle,
   Bell,
+  ShoppingCart,
+  DollarSign,
+  User,
+  TrendingUp,
+  Wallet,
+  Box,
 } from 'lucide-react-native';
 
 export {
@@ -40,4 +46,10 @@ export {
   Award,
   CheckCircle,
   Bell,
+  ShoppingCart,
+  DollarSign,
+  User,
+  TrendingUp,
+  Wallet,
+  Box,
 };

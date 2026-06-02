@@ -34,7 +34,7 @@ class DiplomaManager:
         tx.signature = "SIG_ADMIN_DIPLOME"
         
         if self.blockchain.ajouter_transaction(tx):
-            self.diplomas[diploma_id] = diploma_data
+            # self.diplomas[diploma_id] = diploma_data <-- SUPPRIMÉ
             return diploma_id
         return None
 
@@ -45,14 +45,35 @@ class DiplomaManager:
         # 1. Trouver la transaction correspondant au diplôme
         target_tx = None
         target_block = None
+        
+        # Log pour déboguer
+        print(f" [DEBUG] Searching proof for: {diploma_id}")
+        
         for block in self.blockchain.chaine:
             for tx in block.transactions:
-                if isinstance(tx.donnees, dict) and tx.donnees.get("student_id") in diploma_id:
-                    target_tx = tx
-                    target_block = block
-                    break
+                if tx.secteur == SecteurActivite.DIPLOME:
+                    # Safely parse donnees if it's a string
+                    data = tx.donnees
+                    if isinstance(data, str):
+                        import json
+                        try: data = json.loads(data)
+                        except: data = {}
+                    
+                    # Construct a temporary diploma_id to match the one in register_diploma
+                    student_id = data.get("student_id", "")
+                    year = data.get("year", "")
+                    generated_id = f"DIP-{student_id}-{year}"
+                    print(f" [DEBUG] Comparing {diploma_id} with {generated_id}")
+                    
+                    if generated_id == diploma_id:
+                        target_tx = tx
+                        target_block = block
+                        print(f" [DEBUG] Found matching tx: {tx.hash}")
+                        break
+            if target_tx: break
         
         if not target_tx or not target_block:
+            print(f" [DEBUG] Proof NOT found for {diploma_id}")
             return None
             
         # 2. Générer la preuve

@@ -27,11 +27,12 @@ import './dashboard.css';
 
 export default function EducationModule() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{"username": "Utilisateur Réseau", "public_key": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"}');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isAdmin = ['ADMIN', 'UNIVERSITE', 'MINISTERE'].includes((user.role || '').toUpperCase());
 
-  const [activeTab, setActiveTab] = useState<'request' | 'verify' | 'admin'>(isAdmin ? 'admin' : 'request');
+  const [activeTab, setActiveTab] = useState<'request' | 'verify' | 'admin' | 'my'>(isAdmin ? 'admin' : 'request');
   const [loading, setLoading] = useState(false);
+  const [diplomas, setDiplomas] = useState<any[]>([]);
   
   // Request Form State
   const [requestData, setRequestData] = useState({
@@ -50,16 +51,21 @@ export default function EducationModule() {
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
 
   const fetchData = async () => {
-    if (activeTab === 'admin' && isAdmin) {
-      setLoading(true);
-      try {
-        const data = await educationService.getPendingDiplomas();
-        setPendingRequests(data);
-      } catch (err) {
-        console.error("Erreur chargement admin education :", err);
-      } finally {
-        setLoading(false);
-      }
+    setLoading(true);
+    try {
+        if (activeTab === 'admin' && isAdmin) {
+            const data = await educationService.getPendingDiplomas();
+            setPendingRequests(data);
+        } else if (activeTab === 'my') {
+            console.log(" [DEBUG] Fetching diplomas for user:", user.public_key);
+            const data = await educationService.getDiplomasByOwner(user.public_key);
+            console.log(" [DEBUG] Received diplomas:", data);
+            setDiplomas(Array.isArray(data) ? data : []);
+        }
+    } catch (err) {
+      console.error("Erreur chargement éducation :", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -216,6 +222,13 @@ export default function EducationModule() {
             >
               Vérifier un Diplôme
             </button>
+            <button 
+              className={`tab-btn ${activeTab === 'my' ? 'active' : ''}`}
+              onClick={() => setActiveTab('my')}
+              style={{ padding: '15px 0', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '14px', color: activeTab === 'my' ? 'var(--navy)' : '#94a3b8', borderBottom: activeTab === 'my' ? '3px solid var(--navy)' : '3px solid transparent' }}
+            >
+              Mes Diplômes
+            </button>
             {isAdmin && (
               <button 
                 className={`tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
@@ -367,6 +380,23 @@ export default function EducationModule() {
                   </div>
                 )}
 
+                {activeTab === 'my' && (
+                  <div style={{ background: 'var(--blanc)', padding: '40px', borderRadius: '24px', border: 'var(--border-main)' }}>
+                    <h2 className="section-title">Mes Diplômes Certifiés</h2>
+                    {diplomas.length === 0 ? <p>Aucun diplôme trouvé pour votre compte.</p> : (
+                        <div className="parcels-grid">
+                            {diplomas.map((d, i) => (
+                                <div key={d.tx_hash} className="parcel-card" style={{ borderLeft: '4px solid var(--or)' }}>
+                                    <div className="parcel-header"><span className="parcel-id">{d.diploma_id}</span></div>
+                                    <h3 style={{fontSize: '16px', margin: '10px 0'}}>{d.title}</h3>
+                                    <p style={{fontSize: '12px', opacity: 0.7}}>{d.university} - {d.year}</p>
+                                    <p style={{fontSize: '10px', color: 'var(--or)', fontWeight: 800, marginTop: '8px' }}>ID: {d.diploma_id}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                  </div>
+                )}
                 {activeTab === 'admin' && isAdmin && (
                   <div className="admin-requests-area">
                     <h2 className="section-title">Certifications en Attente</h2>
