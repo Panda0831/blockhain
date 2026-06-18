@@ -7,4 +7,5 @@ flet
 python-multipart
 passlib[bcrypt]
 email-validator
+python-jose[cryptography]
 pytest

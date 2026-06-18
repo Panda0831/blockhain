@@ -1,12 +1,18 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Cpu,
+  Database,
   GraduationCap,
   Hash,
   LayoutDashboard,
   LogOut,
   Map as MapIcon,
   Search,
+  ShieldCheck,
   Trees,
   User,
   Wallet,
@@ -23,7 +29,8 @@ export default function RegistryExplorer() {
   const [blocks, setBlocks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const blocksPerPage = 5;
+  const [expandedBlock, setExpandedBlock] = useState<number | null>(null);
+  const blocksPerPage = 8;
 
   useEffect(() => {
     blockchainService
@@ -46,11 +53,24 @@ export default function RegistryExplorer() {
 
   const paginate = (pageNumber: number) => {
     setCurrentPage(pageNumber);
+    setExpandedBlock(null);
   };
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/auth");
+  };
+
+  const toggleExpand = (index: number) => {
+    setExpandedBlock(expandedBlock === index ? null : index);
+  };
+
+  const formatTime = (ts: number) => {
+    return new Date(ts * 1000).toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
   };
 
   return (
@@ -107,6 +127,19 @@ export default function RegistryExplorer() {
             <h1>Registre Décentralisé</h1>
           </div>
           <div className="user-status">
+            <div
+              className="header-network-stats"
+              style={{ marginRight: "40px" }}
+            >
+              <div className="h-stat">
+                <span className="h-label">NODES</span>
+                <span className="h-value">23 ACTIVE</span>
+              </div>
+              <div className="h-stat">
+                <span className="h-label">HASH RATE</span>
+                <span className="h-value">8.4 MH/s</span>
+              </div>
+            </div>
             <Link
               to="/profile"
               style={{
@@ -137,14 +170,16 @@ export default function RegistryExplorer() {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: "20px",
+              marginBottom: "30px",
             }}
           >
-            <h2 className="section-title">Blocs Validés ({blocks.length})</h2>
-            <div
-              className="pagination-controls"
-              style={{ display: "flex", gap: "10px" }}
-            >
+            <div>
+              <h2 className="section-title">Chaîne de Blocs</h2>
+              <p style={{ opacity: 0.5, fontSize: "13px" }}>
+                {blocks.length} blocs validés par le réseau Hazo Lova
+              </p>
+            </div>
+            <div className="pagination-controls">
               <button
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
@@ -168,42 +203,157 @@ export default function RegistryExplorer() {
           {loading ? (
             <div className="loading-blockchain">
               <div className="loading-spinner"></div>
-              <p>Synchronisation...</p>
+              <p style={{ fontWeight: 800, letterSpacing: "1px" }}>
+                SYNCHRONISATION DU REGISTRE...
+              </p>
             </div>
           ) : (
-            <div className="blockchain-sequence">
-              {currentBlocks.map((block: any, i: number) => (
-                <React.Fragment key={block.index}>
+            <div className="blockchain-grid-container">
+              <div className="blockchain-grid">
+                {currentBlocks.map((block: any, i: number) => (
                   <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    key={block.index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="block-card-wrapper"
+                    className={`block-card-wrapper ${
+                      expandedBlock === block.index ? "expanded" : ""
+                    }`}
                   >
-                    <div className="block-card">
+                    <div
+                      className={`block-card ${
+                        expandedBlock === block.index ? "expanded" : ""
+                      }`}
+                    >
                       <div className="block-header">
-                        <div className="block-index">#{block.index}</div>
-                        <div className="block-status-badge">VERIFIED</div>
+                        <div className="block-id-tag">BLOCK #{block.index}</div>
+                        <div className="block-status-badge">
+                          <div className="status-dot"></div>
+                          SCELLÉ
+                        </div>
                       </div>
-                      <div className="block-detail-item">
-                        <Hash size={12} /> {block.hash.substring(0, 32)}...
-                      </div>
-                      <div className="tx-info">
-                        <Activity size={14} /> {block.transactions?.length || 0}{" "}
-                        ATOMIC_TXS
-                      </div>
-                    </div>
-                  </motion.div>
 
-                  {i < currentBlocks.length - 1 && (
-                    <div className="chain-link-connector">
-                      <div className="chain-link-line"></div>
-                      <div className="chain-link-dot"></div>
-                      <div className="chain-link-label">PREV_HASH_LINK</div>
+                      <div className="block-meta-grid">
+                        <div className="meta-item">
+                          <span className="meta-label">
+                            <Clock size={10} /> TIMESTAMP
+                          </span>
+                          <span className="meta-value">
+                            {formatTime(block.timestamp)}
+                          </span>
+                        </div>
+                        <div className="meta-item">
+                          <span className="meta-label">
+                            <Cpu size={10} /> NONCE
+                          </span>
+                          <span className="meta-value">{block.nonce}</span>
+                        </div>
+                        <div
+                          className="meta-item"
+                          style={{ gridColumn: "span 2" }}
+                        >
+                          <span className="meta-label">
+                            <Hash size={10} /> BLOCK HASH
+                          </span>
+                          <span className="meta-value hash">{block.hash}</span>
+                        </div>
+                        {expandedBlock === block.index && (
+                          <>
+                            <div
+                              className="meta-item"
+                              style={{ gridColumn: "span 2" }}
+                            >
+                              <span className="meta-label">
+                                <Database size={10} /> MERKLE ROOT
+                              </span>
+                              <span className="meta-value hash">
+                                {block.merkle_root}
+                              </span>
+                            </div>
+                            <div
+                              className="meta-item"
+                              style={{ gridColumn: "span 2" }}
+                            >
+                              <span className="meta-label">
+                                <ShieldCheck size={10} /> PREVIOUS HASH
+                              </span>
+                              <span className="meta-value hash">
+                                {block.previous_hash}
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="block-tx-section">
+                        <div className="tx-header">
+                          <div className="tx-info">
+                            <Activity size={14} />{" "}
+                            {block.transactions?.length || 0} TRANSACTIONS
+                          </div>
+                          <button
+                            className="view-tx-toggle"
+                            onClick={() => toggleExpand(block.index)}
+                          >
+                            {expandedBlock === block.index ? (
+                              <ChevronUp size={14} />
+                            ) : (
+                              <ChevronDown size={14} />
+                            )}
+                            {expandedBlock === block.index
+                              ? "RÉDUIRE"
+                              : "DÉTAILS"}
+                          </button>
+                        </div>
+
+                        <AnimatePresence>
+                          {expandedBlock === block.index && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="tx-list"
+                            >
+                              {block.transactions &&
+                              block.transactions.length > 0 ? (
+                                block.transactions.map((tx: any, idx: number) => (
+                                  <div key={idx} className="tx-item">
+                                    <span
+                                      style={{ fontWeight: 600, opacity: 0.7 }}
+                                    >
+                                      {tx.sender?.substring(0, 8)}... →{" "}
+                                      {tx.receiver?.substring(0, 8)}...
+                                    </span>
+                                    <span className="tx-type-badge">
+                                      {tx.type || "DATA"}
+                                    </span>
+                                  </div>
+                                ))
+                              ) : (
+                                <p
+                                  style={{
+                                    fontSize: "10px",
+                                    opacity: 0.5,
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  Aucune transaction de données
+                                </p>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
-                  )}
-                </React.Fragment>
-              ))}
+                    {/* Visual Chain Connector */}
+                    {i % 4 !== 3 && i < currentBlocks.length - 1 && expandedBlock !== block.index && (
+                      <div className="grid-connector-h">
+                        <div className="connector-dot"></div>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -211,3 +361,5 @@ export default function RegistryExplorer() {
     </div>
   );
 }
+
+

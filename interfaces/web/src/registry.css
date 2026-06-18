@@ -196,51 +196,227 @@
   font-size: 13px;
 }
 
-/* Blockchain Sequence Horizontal Layout */
-.blockchain-sequence {
-  padding: 40px 80px 100px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  position: relative;
-  z-index: 10;
-  overflow-x: auto;
-  gap: 0;
+/* Blockchain Grid Masterpiece */
+.blockchain-grid-container {
   width: 100%;
-  scrollbar-width: thin;
-  scrollbar-color: var(--emeraude) transparent;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 40px;
 }
 
-.blockchain-sequence::-webkit-scrollbar {
-  height: 6px;
-}
-
-.blockchain-sequence::-webkit-scrollbar-thumb {
-  background: var(--emeraude);
-  border-radius: 10px;
+.blockchain-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, auto);
+  gap: 40px 24px; /* Increased vertical gap for better row separation */
+  width: 100%;
+  max-width: 1400px;
 }
 
 .block-card-wrapper {
-  flex-shrink: 0;
-  width: 310px;
+  width: 100%;
+  transition: all 0.5s ease;
+  position: relative;
+}
+
+/* Grid Connectors */
+.grid-connector-h {
+  position: absolute;
+  top: 50%;
+  right: -24px;
+  width: 24px;
+  height: 2px;
+  background: var(--emeraude);
+  opacity: 0.2;
+  transform: translateY(-50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.connector-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--emeraude);
+  border-radius: 50%;
+  top: 50%;
+  left: 0;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 12px var(--emeraude);
+  animation: moveAcross 2s infinite linear;
+}
+
+@keyframes moveAcross {
+  0% { left: 0; opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+.block-card-wrapper.expanded {
+  grid-column: span 2;
+  grid-row: span 1;
 }
 
 .block-card {
-  background: var(--blanc);
-  border: 1px solid var(--border-subtle);
-  border-radius: 20px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(24, 36, 54, 0.08);
+  border-radius: 24px;
   padding: 24px;
   position: relative;
   overflow: hidden;
-  transition: all 0.4s ease;
-  box-shadow: 0 10px 25px rgba(24, 36, 54, 0.03);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(24, 36, 54, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .block-card:hover {
   transform: translateY(-8px);
   border-color: var(--emeraude);
-  box-shadow: 0 20px 40px rgba(45, 122, 88, 0.08);
+  box-shadow: 0 20px 40px rgba(45, 122, 88, 0.1);
 }
+
+.block-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meta-label {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: var(--navy);
+  opacity: 0.4;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  word-break: break-all;
+}
+
+.meta-value.hash {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  background: rgba(45, 122, 88, 0.05);
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--emeraude);
+  line-height: 1.4;
+}
+
+.block-tx-section {
+  background: rgba(24, 36, 54, 0.02);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 4px;
+}
+
+/* Pagination Styling Improvements */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--blanc);
+  padding: 8px 16px;
+  border-radius: 50px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+.tx-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.tx-item {
+  background: var(--blanc);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 11px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(24, 36, 54, 0.03);
+}
+
+.tx-type-badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 900;
+  background: var(--emeraude);
+  color: var(--blanc);
+}
+
+.view-tx-toggle {
+  background: none;
+  border: 1px solid rgba(24, 36, 54, 0.1);
+  color: var(--navy);
+  padding: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.view-tx-toggle:hover {
+  background: var(--navy);
+  color: var(--blanc);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .blockchain-sequence {
+    padding: 20px;
+  }
+  .block-card-wrapper {
+    width: 280px;
+  }
+  .block-card {
+    padding: 20px;
+  }
+  .registry-header {
+    padding: 15px 20px;
+  }
+  .registry-main-title {
+    font-size: 32px;
+  }
+}
+
 
 /* Chain Link Connector Horizontal Styling */
 .chain-link-connector {
