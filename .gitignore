@@ -42,3 +42,7 @@ data/persistence/
 # OS
 .DS_Store
 Thumbs.db
+
+# Gemini
+.gemini/
+
